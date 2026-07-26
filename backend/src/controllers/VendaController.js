@@ -1,4 +1,5 @@
 const VendaService = require("../services/VendaService");
+const AuditoriaService = require("../services/AuditoriaService");
 
 class VendaController {
   async index(req, res) {
@@ -23,14 +24,32 @@ class VendaController {
   async store(req, res) {
     const venda = await VendaService.criar(req.body, req.usuario.empresaId);
 
+    await AuditoriaService.registrar({
+      empresaId: req.usuario.empresaId,
+      usuarioId: req.usuario.sub,
+      acao: "venda.criar",
+      entidade: "Venda",
+      entidadeId: venda.id,
+      detalhes: { total: venda.total, clienteId: venda.clienteId },
+      ip: req.ip,
+    });
+
     return res.status(201).json(venda);
   }
 
   async destroy(req, res) {
-    await VendaService.cancelar(
-      Number(req.params.id),
-      req.usuario.empresaId,
-    );
+    const id = Number(req.params.id);
+
+    await VendaService.cancelar(id, req.usuario.empresaId);
+
+    await AuditoriaService.registrar({
+      empresaId: req.usuario.empresaId,
+      usuarioId: req.usuario.sub,
+      acao: "venda.cancelar",
+      entidade: "Venda",
+      entidadeId: id,
+      ip: req.ip,
+    });
 
     return res.status(204).send();
   }

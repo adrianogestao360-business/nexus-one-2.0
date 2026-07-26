@@ -1,4 +1,5 @@
 const AuthService = require("../services/AuthService");
+const AuditoriaService = require("../services/AuditoriaService");
 
 class AuthController {
   async login(req, res) {
@@ -10,7 +11,23 @@ class AuthController {
       });
     }
 
-    const resultado = await AuthService.login(email, senha);
+    let resultado;
+
+    try {
+      resultado = await AuthService.login(email, senha);
+    } catch (error) {
+      await AuditoriaService.registrarLoginFalho(email, req.ip);
+      throw error;
+    }
+
+    await AuditoriaService.registrar({
+      empresaId: resultado.usuario.empresaId,
+      usuarioId: resultado.usuario.id,
+      acao: "login",
+      entidade: "Usuario",
+      entidadeId: resultado.usuario.id,
+      ip: req.ip,
+    });
 
     return res.status(200).json(resultado);
   }

@@ -19,6 +19,7 @@ const TODAS_PERMISSOES = [
   "papeis.gerenciar",
   "notas-fiscais.gerenciar",
   "crm.gerenciar",
+  "auditoria.visualizar",
 ];
 
 let contador = 0;

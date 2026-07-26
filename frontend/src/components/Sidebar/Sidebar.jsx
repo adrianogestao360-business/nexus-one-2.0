@@ -25,6 +25,7 @@ import {
   Payments,
   Assessment,
   Handshake,
+  History,
 } from "@mui/icons-material";
 
 import { useNavigate, useLocation } from "react-router-dom";
@@ -50,6 +51,7 @@ function Sidebar() {
     { text: "WMS", icon: <Warehouse />, path: "/wms" },
     { text: "Transportes", icon: <LocalShipping />, path: "/transportes" },
     { text: "Relatórios", icon: <Assessment />, path: "/relatorios" },
+    { text: "Auditoria", icon: <History />, path: "/auditoria" },
     { text: "Configurações", icon: <Settings />, path: "/configuracoes" },
   ];
 

@@ -46,6 +46,7 @@ async function createAdmin() {
     "papeis.gerenciar",
     "notas-fiscais.gerenciar",
     "crm.gerenciar",
+    "auditoria.visualizar",
   ];
 
   for (const codigo of codigosPermissoes) {

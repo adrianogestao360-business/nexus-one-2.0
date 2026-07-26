@@ -22,6 +22,7 @@ const EntregaController = require("../controllers/EntregaController");
 const NotaFiscalController = require("../controllers/NotaFiscalController");
 const DashboardController = require("../controllers/DashboardController");
 const OportunidadeController = require("../controllers/OportunidadeController");
+const AuditoriaController = require("../controllers/AuditoriaController");
 
 const AuthMiddleware = require("../middlewares/AuthMiddleware");
 const PermissionMiddleware = require("../middlewares/PermissionMiddleware");
@@ -51,6 +52,13 @@ router.post(
 );
 
 router.get("/dashboard", AuthMiddleware.handle, DashboardController.index);
+
+router.get(
+  "/auditoria",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("auditoria.visualizar"),
+  AuditoriaController.index,
+);
 
 router.get("/empresas", AuthMiddleware.handle, EmpresaController.index);
 router.get("/empresas/:id", AuthMiddleware.handle, EmpresaController.show);

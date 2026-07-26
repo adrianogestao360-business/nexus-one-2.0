@@ -1,4 +1,5 @@
 const PapelService = require("../services/PapelService");
+const AuditoriaService = require("../services/AuditoriaService");
 
 class PapelController {
   async index(req, res) {
@@ -33,11 +34,23 @@ class PapelController {
   }
 
   async definirPermissoes(req, res) {
+    const id = Number(req.params.id);
+
     const papel = await PapelService.definirPermissoes(
-      Number(req.params.id),
+      id,
       req.body.permissaoIds,
       req.usuario.empresaId,
     );
+
+    await AuditoriaService.registrar({
+      empresaId: req.usuario.empresaId,
+      usuarioId: req.usuario.sub,
+      acao: "papel.permissoes.alterar",
+      entidade: "Papel",
+      entidadeId: id,
+      detalhes: { permissaoIds: req.body.permissaoIds },
+      ip: req.ip,
+    });
 
     return res.json(papel);
   }
