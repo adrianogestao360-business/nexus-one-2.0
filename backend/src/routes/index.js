@@ -38,6 +38,16 @@ router.get("/", (req, res) => {
 router.post("/auth/login", AuthController.login);
 router.post("/auth/refresh", AuthController.refresh);
 router.post("/auth/logout", AuthController.logout);
+router.get(
+  "/auth/minhas-empresas",
+  AuthMiddleware.handle,
+  AuthController.minhasEmpresas,
+);
+router.post(
+  "/auth/trocar-empresa",
+  AuthMiddleware.handle,
+  AuthController.trocarEmpresa,
+);
 
 router.get("/dashboard", AuthMiddleware.handle, DashboardController.index);
 

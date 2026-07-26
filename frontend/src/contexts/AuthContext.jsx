@@ -74,6 +74,28 @@ export function AuthProvider({ children }) {
     setAccessToken(null);
   }
 
+  async function listarEmpresasDisponiveis() {
+    const response = await api.get("/auth/minhas-empresas");
+    return response.data;
+  }
+
+  async function trocarEmpresa(empresaId) {
+    const response = await api.post("/auth/trocar-empresa", { empresaId });
+
+    const {
+      usuario,
+      accessToken: newAccessToken,
+      refreshToken,
+    } = response.data;
+
+    localStorage.setItem("@NexusOne:user", JSON.stringify(usuario));
+    localStorage.setItem("@NexusOne:accessToken", newAccessToken);
+    localStorage.setItem("@NexusOne:refreshToken", refreshToken);
+
+    setUser(usuario);
+    setAccessToken(newAccessToken);
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -81,6 +103,8 @@ export function AuthProvider({ children }) {
         accessToken,
         signIn,
         signOut,
+        listarEmpresasDisponiveis,
+        trocarEmpresa,
         authenticated: Boolean(user && accessToken),
       }}
     >

@@ -38,6 +38,31 @@ class AuthController {
 
     return res.status(204).send();
   }
+
+  async minhasEmpresas(req, res) {
+    const empresas = await AuthService.listarEmpresasDisponiveis(
+      req.usuario.sub,
+    );
+
+    return res.json(empresas);
+  }
+
+  async trocarEmpresa(req, res) {
+    const { empresaId } = req.body;
+
+    if (!empresaId) {
+      return res.status(400).json({
+        message: "empresaId é obrigatório.",
+      });
+    }
+
+    const resultado = await AuthService.trocarEmpresa(
+      req.usuario.sub,
+      Number(empresaId),
+    );
+
+    return res.status(200).json(resultado);
+  }
 }
 
 module.exports = new AuthController();
