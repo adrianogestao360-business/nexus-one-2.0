@@ -45,6 +45,7 @@ async function createAdmin() {
     "frota.gerenciar",
     "papeis.gerenciar",
     "notas-fiscais.gerenciar",
+    "crm.gerenciar",
   ];
 
   for (const codigo of codigosPermissoes) {

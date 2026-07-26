@@ -24,6 +24,7 @@ import {
   ShoppingCart,
   Payments,
   Assessment,
+  Handshake,
 } from "@mui/icons-material";
 
 import { useNavigate, useLocation } from "react-router-dom";
@@ -39,6 +40,7 @@ function Sidebar() {
     { text: "Empresas", icon: <Business />, path: "/empresas" },
     { text: "Usuários", icon: <People />, path: "/usuarios" },
     { text: "Clientes", icon: <Groups />, path: "/clientes" },
+    { text: "CRM", icon: <Handshake />, path: "/crm" },
     { text: "Fornecedores", icon: <LocalMall />, path: "/fornecedores" },
     { text: "Produtos", icon: <Inventory2 />, path: "/produtos" },
     { text: "Vendas", icon: <PointOfSale />, path: "/vendas" },

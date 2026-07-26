@@ -21,6 +21,7 @@ const PermissaoController = require("../controllers/PermissaoController");
 const EntregaController = require("../controllers/EntregaController");
 const NotaFiscalController = require("../controllers/NotaFiscalController");
 const DashboardController = require("../controllers/DashboardController");
+const OportunidadeController = require("../controllers/OportunidadeController");
 
 const AuthMiddleware = require("../middlewares/AuthMiddleware");
 const PermissionMiddleware = require("../middlewares/PermissionMiddleware");
@@ -162,6 +163,35 @@ router.delete(
   AuthMiddleware.handle,
   PermissionMiddleware.handle("clientes.gerenciar"),
   ClienteController.destroy,
+);
+
+router.get(
+  "/oportunidades",
+  AuthMiddleware.handle,
+  OportunidadeController.index,
+);
+router.get(
+  "/oportunidades/:id",
+  AuthMiddleware.handle,
+  OportunidadeController.show,
+);
+router.post(
+  "/oportunidades",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("crm.gerenciar"),
+  OportunidadeController.store,
+);
+router.put(
+  "/oportunidades/:id",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("crm.gerenciar"),
+  OportunidadeController.update,
+);
+router.patch(
+  "/oportunidades/:id/estagio",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("crm.gerenciar"),
+  OportunidadeController.moverEstagio,
 );
 
 router.get(

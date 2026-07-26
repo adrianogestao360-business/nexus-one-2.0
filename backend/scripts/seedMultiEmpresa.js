@@ -16,6 +16,7 @@ const codigosPermissoes = [
   "frota.gerenciar",
   "papeis.gerenciar",
   "notas-fiscais.gerenciar",
+  "crm.gerenciar",
 ];
 
 async function seedMultiEmpresa() {

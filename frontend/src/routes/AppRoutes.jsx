@@ -15,6 +15,7 @@ import WMS from "../modules/wms/pages/WMS";
 import Transportes from "../modules/frota/pages/Transportes";
 import Configuracoes from "../modules/configuracoes/pages/Configuracoes";
 import Relatorios from "../modules/relatorios/pages/Relatorios";
+import CRM from "../modules/crm/pages/CRM";
 
 import PrivateRoute from "./PrivateRoute";
 
@@ -146,6 +147,15 @@ function AppRoutes() {
           element={
             <PrivateRoute>
               <Relatorios />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/crm"
+          element={
+            <PrivateRoute>
+              <CRM />
             </PrivateRoute>
           }
         />
