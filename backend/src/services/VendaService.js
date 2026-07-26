@@ -8,8 +8,8 @@ const EstoqueLocalizacaoHelper = require("./EstoqueLocalizacaoHelper");
 const { calcularParcelas } = require("../utils/parcelamento");
 
 class VendaService {
-  async listar(empresaId) {
-    return VendaRepository.listar(empresaId);
+  async listar(empresaId, filtros) {
+    return VendaRepository.listar(empresaId, filtros);
   }
 
   async buscarPorId(id, empresaId) {

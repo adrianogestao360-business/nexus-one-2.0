@@ -23,6 +23,7 @@ import {
   PointOfSale,
   ShoppingCart,
   Payments,
+  Assessment,
 } from "@mui/icons-material";
 
 import { useNavigate, useLocation } from "react-router-dom";
@@ -46,6 +47,7 @@ function Sidebar() {
     { text: "Estoque", icon: <Inventory />, path: "/estoque" },
     { text: "WMS", icon: <Warehouse />, path: "/wms" },
     { text: "Transportes", icon: <LocalShipping />, path: "/transportes" },
+    { text: "Relatórios", icon: <Assessment />, path: "/relatorios" },
     { text: "Configurações", icon: <Settings />, path: "/configuracoes" },
   ];
 

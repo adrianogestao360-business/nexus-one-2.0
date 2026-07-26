@@ -1,11 +1,21 @@
 const prisma = require("../config/prisma");
 
 class TituloRepository {
-  async listar(empresaId, tipo) {
+  async listar(empresaId, filtros = {}) {
+    const { tipo, status, dataInicio, dataFim } = filtros;
+
     return prisma.titulo.findMany({
       where: {
         empresaId,
         tipo: tipo || undefined,
+        status: status || undefined,
+        vencimento:
+          dataInicio || dataFim
+            ? {
+                gte: dataInicio ? new Date(`${dataInicio}T00:00:00`) : undefined,
+                lte: dataFim ? new Date(`${dataFim}T23:59:59`) : undefined,
+              }
+            : undefined,
       },
       include: this.#include(),
       orderBy: {

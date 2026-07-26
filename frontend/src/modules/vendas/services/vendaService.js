@@ -1,8 +1,8 @@
 import api from "../../../services/api";
 
 const vendaService = {
-  listar: async () => {
-    const response = await api.get("/vendas");
+  listar: async (filtros) => {
+    const response = await api.get("/vendas", { params: filtros });
     return response.data;
   },
 

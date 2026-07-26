@@ -2,7 +2,11 @@ const VendaService = require("../services/VendaService");
 
 class VendaController {
   async index(req, res) {
-    const vendas = await VendaService.listar(req.usuario.empresaId);
+    const vendas = await VendaService.listar(req.usuario.empresaId, {
+      status: req.query.status,
+      dataInicio: req.query.dataInicio,
+      dataFim: req.query.dataFim,
+    });
 
     return res.json(vendas);
   }

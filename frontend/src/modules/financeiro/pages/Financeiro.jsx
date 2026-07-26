@@ -241,7 +241,7 @@ function Financeiro() {
 
   async function carregarTitulos(tipo) {
     try {
-      const dados = await tituloService.listar(tipo);
+      const dados = await tituloService.listar({ tipo });
       setTitulos(dados);
     } catch (error) {
       console.error("Erro ao carregar títulos:", error);

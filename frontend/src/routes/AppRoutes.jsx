@@ -14,6 +14,7 @@ import Estoque from "../modules/estoque/pages/Estoque";
 import WMS from "../modules/wms/pages/WMS";
 import Transportes from "../modules/frota/pages/Transportes";
 import Configuracoes from "../modules/configuracoes/pages/Configuracoes";
+import Relatorios from "../modules/relatorios/pages/Relatorios";
 
 import PrivateRoute from "./PrivateRoute";
 
@@ -136,6 +137,15 @@ function AppRoutes() {
           element={
             <PrivateRoute>
               <Configuracoes />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/relatorios"
+          element={
+            <PrivateRoute>
+              <Relatorios />
             </PrivateRoute>
           }
         />

@@ -3,8 +3,8 @@ const ClienteRepository = require("../repositories/ClienteRepository");
 const FornecedorRepository = require("../repositories/FornecedorRepository");
 
 class TituloService {
-  async listar(empresaId, tipo) {
-    return TituloRepository.listar(empresaId, tipo);
+  async listar(empresaId, filtros) {
+    return TituloRepository.listar(empresaId, filtros);
   }
 
   async buscarPorId(id, empresaId) {

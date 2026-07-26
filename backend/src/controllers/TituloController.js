@@ -2,10 +2,12 @@ const TituloService = require("../services/TituloService");
 
 class TituloController {
   async index(req, res) {
-    const titulos = await TituloService.listar(
-      req.usuario.empresaId,
-      req.query.tipo,
-    );
+    const titulos = await TituloService.listar(req.usuario.empresaId, {
+      tipo: req.query.tipo,
+      status: req.query.status,
+      dataInicio: req.query.dataInicio,
+      dataFim: req.query.dataFim,
+    });
 
     return res.json(titulos);
   }
