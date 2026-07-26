@@ -285,6 +285,12 @@ router.post(
   PermissionMiddleware.handle("estoque.gerenciar"),
   MovimentoEstoqueController.store,
 );
+router.post(
+  "/movimentos-estoque/transferir",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("estoque.gerenciar"),
+  MovimentoEstoqueController.transferir,
+);
 
 router.get("/zonas", AuthMiddleware.handle, ZonaController.index);
 router.post(

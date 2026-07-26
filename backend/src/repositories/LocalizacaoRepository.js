@@ -21,6 +21,15 @@ class LocalizacaoRepository {
     });
   }
 
+  async findById(id, empresaId) {
+    return prisma.localizacao.findFirst({
+      where: {
+        id,
+        empresaId,
+      },
+    });
+  }
+
   async buscarOuCriarGeral(empresaId, tx = prisma) {
     const existente = await tx.localizacao.findUnique({
       where: {

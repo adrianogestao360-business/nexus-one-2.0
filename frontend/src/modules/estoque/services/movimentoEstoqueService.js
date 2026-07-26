@@ -12,6 +12,11 @@ const movimentoEstoqueService = {
     const response = await api.post("/movimentos-estoque", dados);
     return response.data;
   },
+
+  transferir: async (dados) => {
+    const response = await api.post("/movimentos-estoque/transferir", dados);
+    return response.data;
+  },
 };
 
 export default movimentoEstoqueService;

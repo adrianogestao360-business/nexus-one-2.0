@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { Alert, Chip, Paper, Snackbar } from "@mui/material";
+import { Alert, Button, Chip, Paper, Snackbar, Stack } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 
 import BasePage from "../../../components/BasePage/BasePage";
 import MovimentoEstoqueForm from "../../../components/MovimentoEstoqueForm/MovimentoEstoqueForm";
+import TransferenciaEstoqueForm from "../../../components/TransferenciaEstoqueForm/TransferenciaEstoqueForm";
 
 import movimentoEstoqueService from "../services/movimentoEstoqueService";
 
@@ -11,6 +13,7 @@ const origemLabel = {
   manual: "Manual",
   venda: "Venda",
   compra: "Compra",
+  transferencia: "Transferência",
 };
 
 const columns = [
@@ -73,6 +76,7 @@ const columns = [
 function Estoque() {
   const [rows, setRows] = useState([]);
   const [openForm, setOpenForm] = useState(false);
+  const [openTransferencia, setOpenTransferencia] = useState(false);
   const [mensagem, setMensagem] = useState("");
   const [tipoMensagem, setTipoMensagem] = useState("success");
 
@@ -108,6 +112,26 @@ function Estoque() {
     }
   }
 
+  async function salvarTransferencia(dados) {
+    try {
+      await movimentoEstoqueService.transferir(dados);
+      await carregarMovimentos();
+
+      setOpenTransferencia(false);
+      setTipoMensagem("success");
+      setMensagem("Transferência realizada com sucesso.");
+    } catch (error) {
+      console.error("Erro ao transferir estoque:", error);
+
+      setTipoMensagem("error");
+      setMensagem(
+        error.response?.data?.message || "Erro ao transferir estoque.",
+      );
+
+      throw error;
+    }
+  }
+
   useEffect(() => {
     carregarMovimentos();
   }, []);
@@ -119,6 +143,16 @@ function Estoque() {
       buttonLabel="Novo Movimento"
       onButtonClick={() => setOpenForm(true)}
     >
+      <Stack direction="row" justifyContent="flex-end" sx={{ mb: 2 }}>
+        <Button
+          variant="outlined"
+          startIcon={<SwapHorizIcon />}
+          onClick={() => setOpenTransferencia(true)}
+        >
+          Transferir Estoque
+        </Button>
+      </Stack>
+
       <Paper
         elevation={0}
         sx={{
@@ -156,6 +190,12 @@ function Estoque() {
         open={openForm}
         onClose={() => setOpenForm(false)}
         onSave={salvarMovimento}
+      />
+
+      <TransferenciaEstoqueForm
+        open={openTransferencia}
+        onClose={() => setOpenTransferencia(false)}
+        onSave={salvarTransferencia}
       />
 
       <Snackbar

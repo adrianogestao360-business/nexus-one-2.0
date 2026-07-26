@@ -18,6 +18,15 @@ class MovimentoEstoqueController {
 
     return res.status(201).json(movimento);
   }
+
+  async transferir(req, res) {
+    const resultado = await MovimentoEstoqueService.transferir(
+      req.body,
+      req.usuario.empresaId,
+    );
+
+    return res.status(201).json(resultado);
+  }
 }
 
 module.exports = new MovimentoEstoqueController();
