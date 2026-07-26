@@ -1,0 +1,446 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Empresa {
+  id           Int      @id @default(autoincrement())
+  razaoSocial  String
+  nomeFantasia String
+  cnpj         String   @unique
+  email        String?
+  telefone     String?
+  ativo        Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  usuarios      Usuario[]
+  papeis        Papel[]
+  refreshTokens RefreshToken[]
+  produtos      Produto[]
+  clientes      Cliente[]
+  fornecedores  Fornecedor[]
+  vendas        Venda[]
+  compras       Compra[]
+  titulos       Titulo[]
+  movimentos    MovimentoEstoque[]
+  zonas         Zona[]
+  separacoes    Separacao[]
+  veiculos      Veiculo[]
+  motoristas    Motorista[]
+  entregas      Entrega[]
+  notasFiscais  NotaFiscal[]
+  localizacoes  Localizacao[]
+  estoquesLocalizacao EstoqueLocalizacao[]
+}
+
+model Usuario {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  email     String   @unique
+  senha     String
+  ativo     Boolean  @default(true)
+  empresaId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  empresa       Empresa        @relation(fields: [empresaId], references: [id])
+  usuarioPapeis UsuarioPapel[]
+  refreshTokens RefreshToken[]
+  separacoes    Separacao[]
+
+  @@index([empresaId])
+}
+
+model Papel {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  descricao String?
+  empresaId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  empresa         Empresa          @relation(fields: [empresaId], references: [id])
+  usuarioPapeis   UsuarioPapel[]
+  papelPermissoes PapelPermissao[]
+
+  @@unique([empresaId, nome])
+  @@index([empresaId])
+}
+
+model Permissao {
+  id        Int      @id @default(autoincrement())
+  codigo    String   @unique
+  descricao String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  papelPermissoes PapelPermissao[]
+}
+
+model UsuarioPapel {
+  usuarioId Int
+  papelId   Int
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  papel   Papel   @relation(fields: [papelId], references: [id], onDelete: Cascade)
+
+  @@id([usuarioId, papelId])
+}
+
+model PapelPermissao {
+  papelId     Int
+  permissaoId Int
+
+  papel     Papel     @relation(fields: [papelId], references: [id], onDelete: Cascade)
+  permissao Permissao @relation(fields: [permissaoId], references: [id], onDelete: Cascade)
+
+  @@id([papelId, permissaoId])
+}
+
+model RefreshToken {
+  id        Int       @id @default(autoincrement())
+  token     String    @unique
+  usuarioId Int
+  empresaId Int
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  empresa Empresa @relation(fields: [empresaId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+  @@index([empresaId])
+}
+
+model Produto {
+  id        Int      @id @default(autoincrement())
+  codigo    String
+  descricao String
+  categoria String?
+  unidade   String?
+  preco     Decimal  @default(0) @db.Decimal(12, 2)
+  estoque   Int      @default(0)
+  ativo     Boolean  @default(true)
+  empresaId Int
+  zonaId    Int?
+  endereco  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  empresa Empresa @relation(fields: [empresaId], references: [id])
+  zona    Zona?   @relation(fields: [zonaId], references: [id])
+  vendaItens VendaItem[]
+  compraItens CompraItem[]
+  movimentos MovimentoEstoque[]
+  separacaoItens SeparacaoItem[]
+  estoquesLocalizacao EstoqueLocalizacao[]
+
+  @@unique([empresaId, codigo])
+  @@index([empresaId])
+}
+
+model Cliente {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  documento String?
+  email     String?
+  telefone  String?
+  ativo     Boolean  @default(true)
+  empresaId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  empresa Empresa @relation(fields: [empresaId], references: [id])
+  vendas  Venda[]
+  titulos Titulo[]
+
+  @@index([empresaId])
+}
+
+model Fornecedor {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  documento String?
+  email     String?
+  telefone  String?
+  ativo     Boolean  @default(true)
+  empresaId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  empresa Empresa @relation(fields: [empresaId], references: [id])
+  compras Compra[]
+  titulos Titulo[]
+
+  @@index([empresaId])
+}
+
+model Venda {
+  id        Int      @id @default(autoincrement())
+  clienteId Int
+  empresaId Int
+  total     Decimal  @default(0) @db.Decimal(12, 2)
+  status    String   @default("confirmada")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  empresa Empresa     @relation(fields: [empresaId], references: [id])
+  cliente Cliente     @relation(fields: [clienteId], references: [id])
+  itens   VendaItem[]
+  titulos Titulo[]
+  movimentos MovimentoEstoque[]
+  separacao  Separacao?
+  notasFiscais NotaFiscal[]
+
+  @@index([empresaId])
+}
+
+model VendaItem {
+  id            Int     @id @default(autoincrement())
+  vendaId       Int
+  produtoId     Int
+  quantidade    Int
+  precoUnitario Decimal @db.Decimal(12, 2)
+  subtotal      Decimal @db.Decimal(12, 2)
+
+  venda   Venda   @relation(fields: [vendaId], references: [id], onDelete: Cascade)
+  produto Produto @relation(fields: [produtoId], references: [id])
+
+  @@index([vendaId])
+}
+
+model Compra {
+  id           Int      @id @default(autoincrement())
+  fornecedorId Int
+  empresaId    Int
+  total        Decimal  @default(0) @db.Decimal(12, 2)
+  status       String   @default("confirmada")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  empresa    Empresa      @relation(fields: [empresaId], references: [id])
+  fornecedor Fornecedor   @relation(fields: [fornecedorId], references: [id])
+  itens      CompraItem[]
+  titulos    Titulo[]
+  movimentos MovimentoEstoque[]
+  notasFiscais NotaFiscal[]
+
+  @@index([empresaId])
+}
+
+model CompraItem {
+  id            Int     @id @default(autoincrement())
+  compraId      Int
+  produtoId     Int
+  quantidade    Int
+  precoUnitario Decimal @db.Decimal(12, 2)
+  subtotal      Decimal @db.Decimal(12, 2)
+
+  compra  Compra  @relation(fields: [compraId], references: [id], onDelete: Cascade)
+  produto Produto @relation(fields: [produtoId], references: [id])
+
+  @@index([compraId])
+}
+
+model Titulo {
+  id            Int       @id @default(autoincrement())
+  tipo          String
+  descricao     String
+  valor         Decimal   @db.Decimal(12, 2)
+  vencimento    DateTime
+  status        String    @default("aberta")
+  dataPagamento DateTime?
+  empresaId     Int
+  clienteId     Int?
+  fornecedorId  Int?
+  vendaId       Int?
+  compraId      Int?
+  parcela       Int?
+  totalParcelas Int?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  empresa    Empresa     @relation(fields: [empresaId], references: [id])
+  cliente    Cliente?    @relation(fields: [clienteId], references: [id])
+  fornecedor Fornecedor? @relation(fields: [fornecedorId], references: [id])
+  venda      Venda?      @relation(fields: [vendaId], references: [id])
+  compra     Compra?     @relation(fields: [compraId], references: [id])
+
+  @@index([empresaId])
+}
+
+model MovimentoEstoque {
+  id            Int      @id @default(autoincrement())
+  produtoId     Int
+  empresaId     Int
+  tipo          String
+  quantidade    Int
+  motivo        String
+  origem        String
+  saldoApos     Int
+  vendaId       Int?
+  compraId      Int?
+  localizacaoId Int?
+  createdAt     DateTime @default(now())
+
+  produto     Produto      @relation(fields: [produtoId], references: [id])
+  empresa     Empresa      @relation(fields: [empresaId], references: [id])
+  venda       Venda?       @relation(fields: [vendaId], references: [id])
+  compra      Compra?      @relation(fields: [compraId], references: [id])
+  localizacao Localizacao? @relation(fields: [localizacaoId], references: [id])
+
+  @@index([empresaId])
+  @@index([produtoId])
+}
+
+model Zona {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  empresaId Int
+  createdAt DateTime @default(now())
+
+  empresa      Empresa       @relation(fields: [empresaId], references: [id])
+  produtos     Produto[]
+  localizacoes Localizacao[]
+
+  @@unique([empresaId, nome])
+}
+
+model Localizacao {
+  id        Int      @id @default(autoincrement())
+  codigo    String
+  zonaId    Int?
+  ativo     Boolean  @default(true)
+  empresaId Int
+  createdAt DateTime @default(now())
+
+  empresa    Empresa              @relation(fields: [empresaId], references: [id])
+  zona       Zona?                @relation(fields: [zonaId], references: [id])
+  estoques   EstoqueLocalizacao[]
+  movimentos MovimentoEstoque[]
+
+  @@unique([empresaId, codigo])
+}
+
+model EstoqueLocalizacao {
+  id            Int @id @default(autoincrement())
+  produtoId     Int
+  localizacaoId Int
+  empresaId     Int
+  quantidade    Int @default(0)
+
+  produto     Produto     @relation(fields: [produtoId], references: [id])
+  localizacao Localizacao @relation(fields: [localizacaoId], references: [id])
+  empresa     Empresa     @relation(fields: [empresaId], references: [id])
+
+  @@unique([produtoId, localizacaoId])
+}
+
+model Separacao {
+  id          Int       @id @default(autoincrement())
+  vendaId     Int       @unique
+  empresaId   Int
+  status      String    @default("pendente")
+  separadorId Int?
+  iniciadoEm  DateTime?
+  concluidoEm DateTime?
+  expedidoEm  DateTime?
+  createdAt   DateTime  @default(now())
+
+  empresa   Empresa         @relation(fields: [empresaId], references: [id])
+  venda     Venda           @relation(fields: [vendaId], references: [id])
+  separador Usuario?        @relation(fields: [separadorId], references: [id])
+  itens     SeparacaoItem[]
+  entrega   Entrega?
+
+  @@index([empresaId])
+}
+
+model SeparacaoItem {
+  id          Int     @id @default(autoincrement())
+  separacaoId Int
+  produtoId   Int
+  quantidade  Int
+  separado    Boolean @default(false)
+
+  separacao Separacao @relation(fields: [separacaoId], references: [id], onDelete: Cascade)
+  produto   Produto   @relation(fields: [produtoId], references: [id])
+
+  @@index([separacaoId])
+}
+
+model Veiculo {
+  id         Int      @id @default(autoincrement())
+  placa      String
+  modelo     String
+  capacidade String?
+  ativo      Boolean  @default(true)
+  empresaId  Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  empresa  Empresa   @relation(fields: [empresaId], references: [id])
+  entregas Entrega[]
+
+  @@unique([empresaId, placa])
+  @@index([empresaId])
+}
+
+model Motorista {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  cnh       String?
+  telefone  String?
+  ativo     Boolean  @default(true)
+  empresaId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  empresa  Empresa   @relation(fields: [empresaId], references: [id])
+  entregas Entrega[]
+
+  @@index([empresaId])
+}
+
+model Entrega {
+  id          Int       @id @default(autoincrement())
+  separacaoId Int       @unique
+  veiculoId   Int
+  motoristaId Int
+  empresaId   Int
+  status      String    @default("em_rota")
+  dataSaida   DateTime  @default(now())
+  dataEntrega DateTime?
+  createdAt   DateTime  @default(now())
+
+  separacao Separacao @relation(fields: [separacaoId], references: [id])
+  veiculo   Veiculo   @relation(fields: [veiculoId], references: [id])
+  motorista Motorista @relation(fields: [motoristaId], references: [id])
+  empresa   Empresa   @relation(fields: [empresaId], references: [id])
+
+  @@index([empresaId])
+}
+
+model NotaFiscal {
+  id        Int       @id @default(autoincrement())
+  tipo      String
+  numero    String?
+  chave     String?
+  status    String    @default("pendente")
+  empresaId Int
+  vendaId   Int?
+  compraId  Int?
+  emitidaEm DateTime?
+  createdAt DateTime  @default(now())
+
+  empresa Empresa @relation(fields: [empresaId], references: [id])
+  venda   Venda?  @relation(fields: [vendaId], references: [id])
+  compra  Compra? @relation(fields: [compraId], references: [id])
+
+  @@index([empresaId])
+}

@@ -1,0 +1,83 @@
+import { useEffect, useState } from "react";
+
+import { Grid } from "@mui/material";
+
+import BaseDialog from "../BaseDialog/BaseDialog";
+import BaseFormField from "../BaseFormField/BaseFormField";
+
+const initialState = {
+  placa: "",
+  modelo: "",
+  capacidade: "",
+};
+
+function VeiculoForm({ open, onClose, onSave, veiculo }) {
+  const [form, setForm] = useState(initialState);
+
+  useEffect(() => {
+    if (veiculo) {
+      setForm(veiculo);
+    } else {
+      setForm(initialState);
+    }
+  }, [veiculo, open]);
+
+  function handleChange(event) {
+    const { name, value } = event.target;
+
+    setForm((old) => ({
+      ...old,
+      [name]: value,
+    }));
+  }
+
+  async function handleSave() {
+    await onSave(form);
+
+    setForm(initialState);
+
+    onClose();
+  }
+
+  return (
+    <BaseDialog
+      open={open}
+      onClose={onClose}
+      onSave={handleSave}
+      title={veiculo ? "Editar Veículo" : "Novo Veículo"}
+    >
+      <Grid container spacing={2}>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <BaseFormField
+            label="Placa"
+            name="placa"
+            value={form.placa}
+            onChange={handleChange}
+            required
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 5 }}>
+          <BaseFormField
+            label="Modelo"
+            name="modelo"
+            value={form.modelo}
+            onChange={handleChange}
+            required
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 3 }}>
+          <BaseFormField
+            label="Capacidade"
+            name="capacidade"
+            value={form.capacidade}
+            onChange={handleChange}
+          />
+        </Grid>
+      </Grid>
+    </BaseDialog>
+  );
+}
+
+export default VeiculoForm;
