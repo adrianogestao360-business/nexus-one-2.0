@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 
 class JwtService {
@@ -21,6 +22,7 @@ class JwtService {
       {
         sub: usuario.id,
         empresaId: usuario.empresaId,
+        jti: crypto.randomUUID(),
       },
       process.env.JWT_REFRESH_SECRET,
       {
