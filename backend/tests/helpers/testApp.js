@@ -86,4 +86,34 @@ async function criarEmpresaComAdmin(permissoes = TODAS_PERMISSOES) {
   };
 }
 
-module.exports = { app, prisma, criarEmpresaComAdmin, sufixoUnico };
+async function adicionarUsuario(empresa, papel) {
+  const sufixo = sufixoUnico();
+  const senha = "Senha@123";
+  const senhaHash = await bcrypt.hash(senha, 4);
+
+  const usuario = await prisma.usuario.create({
+    data: {
+      nome: `Usuario ${sufixo}`,
+      email: `usuario-${sufixo}@teste.com`,
+      senha: senhaHash,
+      empresaId: empresa.id,
+      usuarioPapeis: {
+        create: { papelId: papel.id },
+      },
+    },
+  });
+
+  const loginResponse = await request(app)
+    .post("/auth/login")
+    .send({ email: usuario.email, senha });
+
+  return { usuario, senha, token: loginResponse.body.accessToken };
+}
+
+module.exports = {
+  app,
+  prisma,
+  criarEmpresaComAdmin,
+  adicionarUsuario,
+  sufixoUnico,
+};
