@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Avatar,
@@ -92,7 +92,7 @@ function VeiculoTable({ rows, onEdit, onDelete, onAbastecer }) {
   return (
     <Paper
       elevation={0}
-      sx={{ height: 480, borderRadius: 3, border: "1px solid #E5E7EB", overflow: "hidden" }}
+      sx={{ height: 480, borderRadius: 3, border: "1px solid rgba(148, 163, 184, 0.14)", overflow: "hidden" }}
     >
       <DataGrid
         rows={rows}
@@ -102,8 +102,8 @@ function VeiculoTable({ rows, onEdit, onDelete, onAbastecer }) {
         initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
         sx={{
           border: 0,
-          "& .MuiDataGrid-columnHeaders": { backgroundColor: "#F8FAFC" },
-          "& .MuiDataGrid-row:hover": { backgroundColor: "#F8FAFC" },
+          "& .MuiDataGrid-columnHeaders": { backgroundColor: "#1B2438" },
+          "& .MuiDataGrid-row:hover": { backgroundColor: "#1B2438" },
         }}
       />
     </Paper>
@@ -164,7 +164,7 @@ function EntregaTable({ rows, onConfirmar }) {
       sx={{
         height: 560,
         borderRadius: 3,
-        border: "1px solid #E5E7EB",
+        border: "1px solid rgba(148, 163, 184, 0.14)",
         overflow: "hidden",
       }}
     >
@@ -183,10 +183,10 @@ function EntregaTable({ rows, onConfirmar }) {
         sx={{
           border: 0,
           "& .MuiDataGrid-columnHeaders": {
-            backgroundColor: "#F8FAFC",
+            backgroundColor: "#1B2438",
           },
           "& .MuiDataGrid-row:hover": {
-            backgroundColor: "#F8FAFC",
+            backgroundColor: "#1B2438",
           },
         }}
       />
@@ -198,7 +198,7 @@ function RotaCard({ rota, onCopiarLink, onVerNoMapa }) {
   return (
     <Paper
       elevation={0}
-      sx={{ p: 2, borderRadius: 3, border: "1px solid #E5E7EB" }}
+      sx={{ p: 2, borderRadius: 3, border: "1px solid rgba(148, 163, 184, 0.14)" }}
     >
       <Stack
         direction="row"
@@ -249,7 +249,7 @@ function RotaCard({ rota, onCopiarLink, onVerNoMapa }) {
             key={entrega.id}
             title={entrega.separacao?.venda?.cliente?.nome || "Cliente"}
             sx={{
-              bgcolor: entrega.status === "entregue" ? "#16A34A" : "#94A3B8",
+              bgcolor: entrega.status === "entregue" ? "#22C55E" : "#475569",
               width: 34,
               height: 34,
             }}

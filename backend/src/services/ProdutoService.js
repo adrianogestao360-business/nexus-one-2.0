@@ -73,6 +73,10 @@ class ProdutoService {
       estoqueMinimo,
       zonaId,
       endereco,
+      ncm,
+      cfop,
+      origem,
+      cest,
     } = data;
 
     if (!codigo || !descricao) {
@@ -94,6 +98,10 @@ class ProdutoService {
           : 5,
       zonaId: zonaId ? Number(zonaId) : null,
       endereco: endereco || null,
+      ncm: ncm || null,
+      cfop: cfop || null,
+      origem: origem !== undefined && origem !== "" ? Number(origem) : 0,
+      cest: cest || null,
     };
   }
 

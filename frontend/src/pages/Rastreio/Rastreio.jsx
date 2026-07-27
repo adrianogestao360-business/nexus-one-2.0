@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
   Alert,
@@ -134,16 +134,16 @@ function Rastreio() {
 
   if (erro) {
     return (
-      <Box sx={{ minHeight: "100vh", p: 3, bgcolor: "#F8FAFC" }}>
+      <Box sx={{ minHeight: "100vh", p: 3, bgcolor: "#0B1220" }}>
         <Alert severity="error">{erro}</Alert>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#F8FAFC", p: 2 }}>
+    <Box sx={{ minHeight: "100vh", bgcolor: "#0B1220", p: 2 }}>
       <Stack spacing={2} sx={{ maxWidth: 480, mx: "auto" }}>
-        <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: "1px solid #E5E7EB" }}>
+        <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: "1px solid rgba(148, 163, 184, 0.14)" }}>
           <Typography variant="h6" fontWeight={700}>
             Rota — {rota.entregas.length} entrega(s)
           </Typography>
@@ -180,7 +180,7 @@ function Rastreio() {
               sx={{
                 p: 2,
                 borderRadius: 3,
-                border: "1px solid #E5E7EB",
+                border: "1px solid rgba(148, 163, 184, 0.14)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",

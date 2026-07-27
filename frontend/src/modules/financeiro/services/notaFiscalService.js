@@ -6,15 +6,20 @@ const notaFiscalService = {
     return response.data;
   },
 
-  emitir: async (id, numero) => {
-    const response = await api.post(`/notas-fiscais/${id}/emitir`, {
-      numero,
-    });
+  emitir: async (id) => {
+    const response = await api.post(`/notas-fiscais/${id}/emitir`);
     return response.data;
   },
 
-  cancelar: async (id) => {
-    const response = await api.post(`/notas-fiscais/${id}/cancelar`);
+  atualizarStatus: async (id) => {
+    const response = await api.post(`/notas-fiscais/${id}/atualizar-status`);
+    return response.data;
+  },
+
+  cancelar: async (id, justificativa) => {
+    const response = await api.post(`/notas-fiscais/${id}/cancelar`, {
+      justificativa,
+    });
     return response.data;
   },
 };

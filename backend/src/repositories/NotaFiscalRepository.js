@@ -38,6 +38,11 @@ class NotaFiscalRepository {
       venda: {
         include: {
           cliente: true,
+          itens: {
+            include: {
+              produto: true,
+            },
+          },
         },
       },
       compra: {

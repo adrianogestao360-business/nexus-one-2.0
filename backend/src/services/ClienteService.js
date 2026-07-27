@@ -36,7 +36,22 @@ class ClienteService {
   }
 
   #sanitizar(data) {
-    const { nome, documento, email, telefone } = data;
+    const {
+      nome,
+      documento,
+      email,
+      telefone,
+      tipoDocumento,
+      logradouro,
+      numero,
+      complemento,
+      bairro,
+      municipio,
+      codigoMunicipioIBGE,
+      uf,
+      cep,
+      limiteCredito,
+    } = data;
 
     if (!nome) {
       const error = new Error("Nome é obrigatório.");
@@ -49,6 +64,19 @@ class ClienteService {
       documento: documento || null,
       email: email || null,
       telefone: telefone || null,
+      tipoDocumento: tipoDocumento || null,
+      logradouro: logradouro || null,
+      numero: numero || null,
+      complemento: complemento || null,
+      bairro: bairro || null,
+      municipio: municipio || null,
+      codigoMunicipioIBGE: codigoMunicipioIBGE || null,
+      uf: uf || null,
+      cep: cep || null,
+      limiteCredito:
+        limiteCredito !== undefined && limiteCredito !== ""
+          ? Number(limiteCredito)
+          : null,
     };
   }
 

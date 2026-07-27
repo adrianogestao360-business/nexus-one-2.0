@@ -14,6 +14,11 @@ const compraService = {
   cancelar: async (id) => {
     await api.delete(`/compras/${id}`);
   },
+
+  devolver: async (id, dados) => {
+    const response = await api.post(`/compras/${id}/devolucoes`, dados);
+    return response.data;
+  },
 };
 
 export default compraService;

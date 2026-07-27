@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import {
   Alert,
   Box,
@@ -343,7 +343,7 @@ function RH() {
               elevation={0}
               sx={{
                 borderRadius: 3,
-                border: "1px solid #E5E7EB",
+                border: "1px solid rgba(148, 163, 184, 0.14)",
                 overflow: "hidden",
               }}
             >
@@ -409,7 +409,7 @@ function RH() {
                 elevation={0}
                 sx={{
                   borderRadius: 3,
-                  border: "1px solid #E5E7EB",
+                  border: "1px solid rgba(148, 163, 184, 0.14)",
                   p: 2,
                 }}
               >

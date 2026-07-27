@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import {
   Alert,
   Box,
@@ -42,7 +42,7 @@ function OportunidadeCard({ oportunidade, onDragStart }) {
       onDragStart={(event) => onDragStart(event, oportunidade.id)}
       sx={{
         borderRadius: 2,
-        border: "1px solid #E5E7EB",
+        border: "1px solid rgba(148, 163, 184, 0.14)",
         cursor: "grab",
         "&:hover": { boxShadow: "0 4px 12px rgba(0,0,0,.08)" },
       }}
@@ -198,9 +198,9 @@ function CRM() {
                   width: 180,
                   minWidth: 180,
                   borderRadius: 3,
-                  border: "1px solid #E5E7EB",
+                  border: "1px solid rgba(148, 163, 184, 0.14)",
                   p: 1.5,
-                  bgcolor: "#F8FAFC",
+                  bgcolor: "#1B2438",
                 }}
               >
                 <Typography variant="subtitle2" fontWeight={700}>

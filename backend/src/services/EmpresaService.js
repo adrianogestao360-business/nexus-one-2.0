@@ -62,7 +62,24 @@ class EmpresaService {
   }
 
   #sanitizar(data) {
-    const { razaoSocial, nomeFantasia, cnpj, email, telefone } = data;
+    const {
+      razaoSocial,
+      nomeFantasia,
+      cnpj,
+      email,
+      telefone,
+      inscricaoEstadual,
+      inscricaoEstadualIsento,
+      regimeTributario,
+      logradouro,
+      numero,
+      complemento,
+      bairro,
+      municipio,
+      codigoMunicipioIBGE,
+      uf,
+      cep,
+    } = data;
 
     if (!razaoSocial || !nomeFantasia || !cnpj) {
       const error = new Error(
@@ -72,7 +89,24 @@ class EmpresaService {
       throw error;
     }
 
-    return { razaoSocial, nomeFantasia, cnpj, email, telefone };
+    return {
+      razaoSocial,
+      nomeFantasia,
+      cnpj,
+      email,
+      telefone,
+      inscricaoEstadual: inscricaoEstadual || null,
+      inscricaoEstadualIsento: Boolean(inscricaoEstadualIsento),
+      regimeTributario: regimeTributario || null,
+      logradouro: logradouro || null,
+      numero: numero || null,
+      complemento: complemento || null,
+      bairro: bairro || null,
+      municipio: municipio || null,
+      codigoMunicipioIBGE: codigoMunicipioIBGE || null,
+      uf: uf || null,
+      cep: cep || null,
+    };
   }
 
   #naoEncontrada() {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import {
   Alert,
   Button,
@@ -282,7 +282,7 @@ function Configuracoes() {
           sx={{
             height: 560,
             borderRadius: 3,
-            border: "1px solid #E5E7EB",
+            border: "1px solid rgba(148, 163, 184, 0.14)",
             overflow: "hidden",
           }}
         >
@@ -301,10 +301,10 @@ function Configuracoes() {
             sx={{
               border: 0,
               "& .MuiDataGrid-columnHeaders": {
-                backgroundColor: "#F8FAFC",
+                backgroundColor: "#1B2438",
               },
               "& .MuiDataGrid-row:hover": {
-                backgroundColor: "#F8FAFC",
+                backgroundColor: "#1B2438",
               },
             }}
           />
@@ -316,7 +316,7 @@ function Configuracoes() {
             p: 3,
             maxWidth: 480,
             borderRadius: 3,
-            border: "1px solid #E5E7EB",
+            border: "1px solid rgba(148, 163, 184, 0.14)",
           }}
         >
           <Stack spacing={2}>

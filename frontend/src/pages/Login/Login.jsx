@@ -59,7 +59,7 @@ function Login() {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        bgcolor: "#F8FAFC",
+        bgcolor: "#0B1220",
       }}
     >
       <Card sx={{ width: 420 }}>

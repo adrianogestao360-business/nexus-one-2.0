@@ -43,7 +43,7 @@ function BaseCrudTable({
       sx={{
         height: 620,
         borderRadius: 3,
-        border: "1px solid #E5E7EB",
+        border: "1px solid rgba(148, 163, 184, 0.14)",
         overflow: "hidden",
       }}
     >
@@ -63,11 +63,11 @@ function BaseCrudTable({
           border: 0,
 
           "& .MuiDataGrid-columnHeaders": {
-            backgroundColor: "#F8FAFC",
+            backgroundColor: "#1B2438",
           },
 
           "& .MuiDataGrid-row:hover": {
-            backgroundColor: "#F8FAFC",
+            backgroundColor: "#1B2438",
           },
         }}
       />

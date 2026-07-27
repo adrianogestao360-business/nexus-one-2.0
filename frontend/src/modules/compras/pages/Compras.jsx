@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   Alert,
+  Button,
   Snackbar,
   Stack,
   Table,
@@ -15,6 +16,7 @@ import BasePage from "../../../components/BasePage/BasePage";
 import BaseCrudTable from "../../../components/BaseCrudTable/BaseCrudTable";
 import BaseDialog from "../../../components/BaseDialog/BaseDialog";
 import CompraForm from "../../../components/CompraForm/CompraForm";
+import DevolucaoForm from "../../../components/DevolucaoForm/DevolucaoForm";
 
 import compraService from "../services/compraService";
 
@@ -22,6 +24,7 @@ function Compras() {
   const [rows, setRows] = useState([]);
   const [openForm, setOpenForm] = useState(false);
   const [compraDetalhe, setCompraDetalhe] = useState(null);
+  const [compraParaDevolver, setCompraParaDevolver] = useState(null);
   const [mensagem, setMensagem] = useState("");
   const [tipoMensagem, setTipoMensagem] = useState("success");
 
@@ -102,6 +105,25 @@ function Compras() {
     }
   }
 
+  async function devolverCompra(dados) {
+    try {
+      await compraService.devolver(compraParaDevolver.id, dados);
+      await carregarCompras();
+
+      setTipoMensagem("success");
+      setMensagem("Devolução registrada com sucesso.");
+    } catch (error) {
+      console.error("Erro ao registrar devolução:", error);
+
+      setTipoMensagem("error");
+      setMensagem(
+        error.response?.data?.message || "Erro ao registrar devolução.",
+      );
+
+      throw error;
+    }
+  }
+
   useEffect(() => {
     carregarCompras();
   }, []);
@@ -174,9 +196,28 @@ function Compras() {
             <Typography variant="h6" textAlign="right">
               Total: R$ {Number(compraDetalhe.total).toFixed(2)}
             </Typography>
+
+            {compraDetalhe.status === "confirmada" && (
+              <Button
+                variant="outlined"
+                color="warning"
+                onClick={() => setCompraParaDevolver(compraDetalhe)}
+                sx={{ alignSelf: "flex-start" }}
+              >
+                Registrar Devolução
+              </Button>
+            )}
           </Stack>
         )}
       </BaseDialog>
+
+      <DevolucaoForm
+        open={Boolean(compraParaDevolver)}
+        pedido={compraParaDevolver}
+        titulo={`Devolução — Compra #${compraParaDevolver?.id || ""}`}
+        onClose={() => setCompraParaDevolver(null)}
+        onSave={devolverCompra}
+      />
 
       <Snackbar
         open={Boolean(mensagem)}

@@ -17,6 +17,20 @@ model Empresa {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  inscricaoEstadual       String?
+  inscricaoEstadualIsento Boolean @default(false)
+  regimeTributario        String?
+  logradouro              String?
+  numero                  String?
+  complemento             String?
+  bairro                  String?
+  municipio               String?
+  codigoMunicipioIBGE     String?
+  uf                      String?
+  cep                     String?
+
+  integracaoFiscal IntegracaoFiscal?
+
   usuarios      Usuario[]
   papeis        Papel[]
   refreshTokens RefreshToken[]
@@ -44,6 +58,7 @@ model Empresa {
   folhasPagamento FolhaPagamento[]
   notificacoesLidas NotificacaoLida[]
   metasVenda    MetaVenda[]
+  devolucoes    Devolucao[]
 }
 
 model Usuario {
@@ -164,6 +179,11 @@ model Produto {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  ncm    String?
+  cfop   String?
+  origem Int?    @default(0)
+  cest   String?
+
   empresa Empresa @relation(fields: [empresaId], references: [id])
   zona    Zona?   @relation(fields: [zonaId], references: [id])
   vendaItens VendaItem[]
@@ -171,6 +191,7 @@ model Produto {
   movimentos MovimentoEstoque[]
   separacaoItens SeparacaoItem[]
   estoquesLocalizacao EstoqueLocalizacao[]
+  devolucaoItens DevolucaoItem[]
 
   @@unique([empresaId, codigo])
   @@index([empresaId])
@@ -186,6 +207,18 @@ model Cliente {
   empresaId Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  tipoDocumento       String?
+  logradouro          String?
+  numero              String?
+  complemento         String?
+  bairro              String?
+  municipio           String?
+  codigoMunicipioIBGE String?
+  uf                  String?
+  cep                 String?
+
+  limiteCredito Decimal? @db.Decimal(12, 2)
 
   empresa       Empresa        @relation(fields: [empresaId], references: [id])
   vendas        Venda[]
@@ -249,6 +282,7 @@ model Venda {
   movimentos MovimentoEstoque[]
   separacao  Separacao?
   notasFiscais NotaFiscal[]
+  devolucoes Devolucao[]
 
   @@index([empresaId])
 }
@@ -282,6 +316,7 @@ model Compra {
   titulos    Titulo[]
   movimentos MovimentoEstoque[]
   notasFiscais NotaFiscal[]
+  devolucoes Devolucao[]
 
   @@index([empresaId])
 }
@@ -435,6 +470,7 @@ model Veiculo {
   modelo         String
   capacidade     String?
   kmMedioPorLitro Decimal? @db.Decimal(6, 2)
+  status         String   @default("disponivel")
   ativo          Boolean  @default(true)
   empresaId      Int
   createdAt      DateTime @default(now())
@@ -541,7 +577,6 @@ model NotaFiscal {
   id        Int       @id @default(autoincrement())
   tipo      String
   numero    String?
-  chave     String?
   status    String    @default("pendente")
   empresaId Int
   vendaId   Int?
@@ -549,11 +584,33 @@ model NotaFiscal {
   emitidaEm DateTime?
   createdAt DateTime  @default(now())
 
+  ref                  String?   @unique
+  ambiente             String?
+  serie                Int       @default(1)
+  chaveAcesso          String?
+  protocoloAutorizacao String?
+  motivoStatus         String?
+  xmlUrl               String?
+  danfeUrl             String?
+  dataAutorizacao      DateTime?
+
   empresa Empresa @relation(fields: [empresaId], references: [id])
   venda   Venda?  @relation(fields: [vendaId], references: [id])
   compra  Compra? @relation(fields: [compraId], references: [id])
 
   @@index([empresaId])
+}
+
+model IntegracaoFiscal {
+  id        Int      @id @default(autoincrement())
+  empresaId Int      @unique
+  provedor  String   @default("focus_nfe")
+  token     String?
+  ambiente  String   @default("homologacao")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  empresa Empresa @relation(fields: [empresaId], references: [id])
 }
 
 model Cargo {
@@ -652,4 +709,36 @@ model MetaVenda {
 
   @@unique([usuarioId, mes, ano])
   @@index([empresaId])
+}
+
+model Devolucao {
+  id         Int      @id @default(autoincrement())
+  tipo       String
+  motivo     String
+  empresaId  Int
+  vendaId    Int?
+  compraId   Int?
+  valorTotal Decimal  @db.Decimal(12, 2)
+  createdAt  DateTime @default(now())
+
+  empresa Empresa         @relation(fields: [empresaId], references: [id])
+  venda   Venda?          @relation(fields: [vendaId], references: [id])
+  compra  Compra?         @relation(fields: [compraId], references: [id])
+  itens   DevolucaoItem[]
+
+  @@index([empresaId])
+}
+
+model DevolucaoItem {
+  id            Int     @id @default(autoincrement())
+  devolucaoId   Int
+  produtoId     Int
+  quantidade    Int
+  valorUnitario Decimal @db.Decimal(12, 2)
+  subtotal      Decimal @db.Decimal(12, 2)
+
+  devolucao Devolucao @relation(fields: [devolucaoId], references: [id], onDelete: Cascade)
+  produto   Produto   @relation(fields: [produtoId], references: [id])
+
+  @@index([devolucaoId])
 }

@@ -31,6 +31,10 @@ const FuncionarioController = require("../controllers/FuncionarioController");
 const FolhaPagamentoController = require("../controllers/FolhaPagamentoController");
 const NotificacaoController = require("../controllers/NotificacaoController");
 const MetaVendaController = require("../controllers/MetaVendaController");
+const IntegracaoFiscalController = require("../controllers/IntegracaoFiscalController");
+const DreController = require("../controllers/DreController");
+const DevolucaoController = require("../controllers/DevolucaoController");
+const IaController = require("../controllers/IaController");
 
 const AuthMiddleware = require("../middlewares/AuthMiddleware");
 const PermissionMiddleware = require("../middlewares/PermissionMiddleware");
@@ -87,6 +91,19 @@ router.delete(
   AuthMiddleware.handle,
   PermissionMiddleware.handle("empresas.gerenciar"),
   EmpresaController.destroy,
+);
+
+router.get(
+  "/empresas/:id/integracao-fiscal",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("empresas.gerenciar"),
+  IntegracaoFiscalController.show,
+);
+router.put(
+  "/empresas/:id/integracao-fiscal",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("empresas.gerenciar"),
+  IntegracaoFiscalController.store,
 );
 
 router.get("/usuarios", AuthMiddleware.handle, UsuarioController.index);
@@ -490,6 +507,12 @@ router.post(
   PermissionMiddleware.handle("notas-fiscais.gerenciar"),
   NotaFiscalController.cancelar,
 );
+router.post(
+  "/notas-fiscais/:id/atualizar-status",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("notas-fiscais.gerenciar"),
+  NotaFiscalController.atualizarStatus,
+);
 
 router.get("/cargos", AuthMiddleware.handle, CargoController.index);
 router.post(
@@ -600,6 +623,38 @@ router.delete(
   AuthMiddleware.handle,
   PermissionMiddleware.handle("metas.gerenciar"),
   MetaVendaController.destroy,
+);
+
+router.get(
+  "/relatorios/dre",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("financeiro.gerenciar"),
+  DreController.show,
+);
+
+router.get(
+  "/devolucoes",
+  AuthMiddleware.handle,
+  DevolucaoController.index,
+);
+router.post(
+  "/vendas/:id/devolucoes",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("vendas.gerenciar"),
+  DevolucaoController.storeVenda,
+);
+router.post(
+  "/compras/:id/devolucoes",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("compras.gerenciar"),
+  DevolucaoController.storeCompra,
+);
+
+router.get("/ia/resumo", AuthMiddleware.handle, IaController.resumo);
+router.post(
+  "/ia/plano-de-acao",
+  AuthMiddleware.handle,
+  IaController.planoDeAcao,
 );
 
 module.exports = router;

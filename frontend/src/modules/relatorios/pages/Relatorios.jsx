@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import {
   Alert,
   Button,
@@ -6,6 +6,10 @@ import {
   Snackbar,
   Stack,
   Tab,
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
   Tabs,
   Typography,
 } from "@mui/material";
@@ -19,16 +23,17 @@ import BaseSelect from "../../../components/BaseSelect/BaseSelect";
 import vendaService from "../../vendas/services/vendaService";
 import tituloService from "../../financeiro/services/tituloService";
 import produtoService from "../../produtos/services/produtoService";
+import dreService from "../services/dreService";
 
 import { exportarCsv } from "../../../utils/csv";
 
 const dataGridSx = {
   border: 0,
   "& .MuiDataGrid-columnHeaders": {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#1B2438",
   },
   "& .MuiDataGrid-row:hover": {
-    backgroundColor: "#F8FAFC",
+    backgroundColor: "#1B2438",
   },
 };
 
@@ -155,7 +160,7 @@ function VendasReport({ onErro }) {
 
       <Paper
         elevation={0}
-        sx={{ height: 480, borderRadius: 3, border: "1px solid #E5E7EB", overflow: "hidden" }}
+        sx={{ height: 480, borderRadius: 3, border: "1px solid rgba(148, 163, 184, 0.14)", overflow: "hidden" }}
       >
         <DataGrid
           rows={linhas}
@@ -314,7 +319,7 @@ function FinanceiroReport({ onErro }) {
 
       <Paper
         elevation={0}
-        sx={{ height: 480, borderRadius: 3, border: "1px solid #E5E7EB", overflow: "hidden" }}
+        sx={{ height: 480, borderRadius: 3, border: "1px solid rgba(148, 163, 184, 0.14)", overflow: "hidden" }}
       >
         <DataGrid
           rows={linhas}
@@ -415,7 +420,7 @@ function EstoqueReport({ onErro }) {
 
       <Paper
         elevation={0}
-        sx={{ height: 480, borderRadius: 3, border: "1px solid #E5E7EB", overflow: "hidden" }}
+        sx={{ height: 480, borderRadius: 3, border: "1px solid rgba(148, 163, 184, 0.14)", overflow: "hidden" }}
       >
         <DataGrid
           rows={linhas}
@@ -430,21 +435,167 @@ function EstoqueReport({ onErro }) {
   );
 }
 
+function DreReport({ onErro }) {
+  const [dataInicio, setDataInicio] = useState("");
+  const [dataFim, setDataFim] = useState("");
+  const [dre, setDre] = useState(null);
+
+  async function filtrar() {
+    try {
+      const dados = await dreService.gerar({
+        dataInicio: dataInicio || undefined,
+        dataFim: dataFim || undefined,
+      });
+      setDre(dados);
+    } catch {
+      onErro("Erro ao gerar DRE.");
+    }
+  }
+
+  function exportar() {
+    exportarCsv(
+      "dre.csv",
+      [
+        { label: "Item", valor: (l) => l.item },
+        { label: "Valor", valor: (l) => l.valor.toFixed(2) },
+      ],
+      [
+        { item: "Receita Bruta de Vendas", valor: dre.receitaBruta },
+        { item: "(-) Custo das Mercadorias", valor: -dre.custoMercadorias },
+        { item: "(=) Lucro Bruto", valor: dre.lucroBruto },
+        { item: "(-) Despesas com Pessoal", valor: -dre.despesasPessoal },
+        {
+          item: "(-) Outras Despesas Operacionais",
+          valor: -dre.outrasDespesasOperacionais,
+        },
+        { item: "(=) Lucro Líquido", valor: dre.lucroLiquido },
+      ],
+    );
+  }
+
+  const linhas = dre && [
+    { label: "Receita Bruta de Vendas", valor: dre.receitaBruta },
+    { label: "(-) Custo das Mercadorias", valor: -dre.custoMercadorias },
+    {
+      label: "(=) Lucro Bruto",
+      valor: dre.lucroBruto,
+      destaque: true,
+    },
+    { label: "(-) Despesas com Pessoal", valor: -dre.despesasPessoal },
+    {
+      label: "(-) Outras Despesas Operacionais",
+      valor: -dre.outrasDespesasOperacionais,
+    },
+    {
+      label: "(=) Lucro Líquido",
+      valor: dre.lucroLiquido,
+      destaque: true,
+    },
+  ];
+
+  return (
+    <Stack spacing={2}>
+      <Stack direction="row" spacing={2} sx={{ alignItems: "center", flexWrap: "wrap" }}>
+        <BaseFormField
+          label="Data início"
+          name="dataInicio"
+          type="date"
+          value={dataInicio}
+          onChange={(e) => setDataInicio(e.target.value)}
+          slotProps={{ inputLabel: { shrink: true } }}
+          sx={{ width: 200 }}
+        />
+
+        <BaseFormField
+          label="Data fim"
+          name="dataFim"
+          type="date"
+          value={dataFim}
+          onChange={(e) => setDataFim(e.target.value)}
+          slotProps={{ inputLabel: { shrink: true } }}
+          sx={{ width: 200 }}
+        />
+
+        <Button variant="contained" onClick={filtrar}>
+          Gerar DRE
+        </Button>
+
+        <Button
+          startIcon={<DownloadIcon />}
+          onClick={exportar}
+          disabled={!dre}
+        >
+          Exportar CSV
+        </Button>
+      </Stack>
+
+      {!dre && (
+        <Typography color="text.secondary">
+          Selecione um período (ou deixe em branco para todo o histórico) e
+          clique em "Gerar DRE".
+        </Typography>
+      )}
+
+      {dre && (
+        <Paper
+          elevation={0}
+          sx={{
+            maxWidth: 560,
+            borderRadius: 3,
+            border: "1px solid rgba(148, 163, 184, 0.14)",
+            overflow: "hidden",
+          }}
+        >
+          <Table>
+            <TableBody>
+              {linhas.map((linha) => (
+                <TableRow key={linha.label}>
+                  <TableCell
+                    sx={{ fontWeight: linha.destaque ? 700 : 400 }}
+                  >
+                    {linha.label}
+                  </TableCell>
+                  <TableCell
+                    align="right"
+                    sx={{
+                      fontWeight: linha.destaque ? 700 : 400,
+                      color:
+                        linha.valor < 0
+                          ? "error.main"
+                          : linha.destaque
+                            ? "success.main"
+                            : "text.primary",
+                    }}
+                  >
+                    {formatarMoeda(linha.valor)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Paper>
+      )}
+    </Stack>
+  );
+}
+
 function Relatorios() {
   const [aba, setAba] = useState("vendas");
   const [mensagem, setMensagem] = useState("");
 
   return (
-    <BasePage title="Relatórios" subtitle="Vendas, Financeiro e Estoque">
+    <BasePage title="Relatórios" subtitle="Vendas, Financeiro, Estoque e DRE">
       <Tabs value={aba} onChange={(_e, v) => setAba(v)} sx={{ mb: 2 }}>
         <Tab value="vendas" label="Vendas" />
         <Tab value="financeiro" label="Financeiro" />
         <Tab value="estoque" label="Estoque" />
+        <Tab value="dre" label="DRE" />
       </Tabs>
 
       {aba === "vendas" && <VendasReport onErro={setMensagem} />}
       {aba === "financeiro" && <FinanceiroReport onErro={setMensagem} />}
       {aba === "estoque" && <EstoqueReport onErro={setMensagem} />}
+      {aba === "dre" && <DreReport onErro={setMensagem} />}
 
       <Snackbar
         open={Boolean(mensagem)}

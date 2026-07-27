@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import {
   Alert,
   Box,
@@ -49,7 +49,7 @@ function MetaCard({ meta, onEdit, onDelete }) {
       sx={{
         p: 2.5,
         borderRadius: 3,
-        border: "1px solid #E5E7EB",
+        border: "1px solid rgba(148, 163, 184, 0.14)",
       }}
     >
       <Stack
@@ -198,7 +198,7 @@ function Metas() {
       {metas.length === 0 ? (
         <Paper
           elevation={0}
-          sx={{ p: 4, borderRadius: 3, border: "1px solid #E5E7EB" }}
+          sx={{ p: 4, borderRadius: 3, border: "1px solid rgba(148, 163, 184, 0.14)" }}
         >
           <Typography color="text.secondary">
             Nenhuma meta cadastrada ainda.

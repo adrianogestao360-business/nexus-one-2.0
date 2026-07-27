@@ -8,8 +8,8 @@ function Footer() {
         mt: "auto",
         py: 2,
         textAlign: "center",
-        borderTop: "1px solid #E5E7EB",
-        bgcolor: "#FFFFFF",
+        borderTop: "1px solid rgba(148, 163, 184, 0.14)",
+        bgcolor: "#0B1220",
       }}
     >
       <Typography variant="body2" color="text.secondary">

@@ -1,12 +1,15 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import {
   Alert,
   Button,
+  Chip,
+  Link,
   Paper,
   Snackbar,
   Stack,
   Tab,
   Tabs,
+  Tooltip,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 
@@ -28,6 +31,22 @@ const notaFiscalStatusLabel = {
   pendente: "Pendente",
   emitida: "Emitida",
   cancelada: "Cancelada",
+  processando_autorizacao: "Processando",
+  autorizado: "Autorizado",
+  erro_autorizacao: "Erro na autorização",
+  denegado: "Denegado",
+  cancelado: "Cancelado",
+};
+
+const notaFiscalStatusCor = {
+  pendente: "default",
+  emitida: "success",
+  cancelada: "default",
+  processando_autorizacao: "info",
+  autorizado: "success",
+  erro_autorizacao: "error",
+  denegado: "error",
+  cancelado: "default",
 };
 
 const notaFiscalTipoLabel = {
@@ -35,7 +54,9 @@ const notaFiscalTipoLabel = {
   entrada: "Entrada",
 };
 
-function NotaFiscalTable({ rows, onEmitir, onCancelar }) {
+const CANCELADOS = ["cancelada", "cancelado"];
+
+function NotaFiscalTable({ rows, onEmitir, onAtualizarStatus, onCancelar }) {
   const columns = [
     {
       field: "tipo",
@@ -60,23 +81,65 @@ function NotaFiscalTable({ rows, onEmitir, onCancelar }) {
       field: "status",
       headerName: "Status",
       flex: 1,
-      valueGetter: (value) => notaFiscalStatusLabel[value] || value,
+      renderCell: (params) => {
+        const chip = (
+          <Chip
+            size="small"
+            label={notaFiscalStatusLabel[params.value] || params.value}
+            color={notaFiscalStatusCor[params.value] || "default"}
+          />
+        );
+
+        return params.row.motivoStatus ? (
+          <Tooltip title={params.row.motivoStatus}>{chip}</Tooltip>
+        ) : (
+          chip
+        );
+      },
     },
     {
       field: "acoes",
       headerName: "Ações",
-      width: 220,
+      width: 280,
       sortable: false,
       filterable: false,
       renderCell: (params) => (
-        <Stack direction="row" spacing={1}>
+        <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }}>
           {params.row.status === "pendente" && (
-            <Button size="small" onClick={() => onEmitir(params.row)}>
+            <Button size="small" onClick={() => onEmitir(params.row.id)}>
               Emitir
             </Button>
           )}
 
-          {params.row.status !== "cancelada" && (
+          {params.row.status === "processando_autorizacao" && (
+            <Button
+              size="small"
+              onClick={() => onAtualizarStatus(params.row.id)}
+            >
+              Atualizar status
+            </Button>
+          )}
+
+          {params.row.status === "autorizado" && (
+            <>
+              {params.row.xmlUrl && (
+                <Link href={params.row.xmlUrl} target="_blank" rel="noopener">
+                  XML
+                </Link>
+              )}
+              {params.row.danfeUrl && (
+                <Link
+                  href={params.row.danfeUrl}
+                  target="_blank"
+                  rel="noopener"
+                >
+                  DANFE
+                </Link>
+              )}
+            </>
+          )}
+
+          {!CANCELADOS.includes(params.row.status) && (
             <Button
               size="small"
               color="error"
@@ -96,7 +159,7 @@ function NotaFiscalTable({ rows, onEmitir, onCancelar }) {
       sx={{
         height: 500,
         borderRadius: 3,
-        border: "1px solid #E5E7EB",
+        border: "1px solid rgba(148, 163, 184, 0.14)",
         overflow: "hidden",
       }}
     >
@@ -115,10 +178,10 @@ function NotaFiscalTable({ rows, onEmitir, onCancelar }) {
         sx={{
           border: 0,
           "& .MuiDataGrid-columnHeaders": {
-            backgroundColor: "#F8FAFC",
+            backgroundColor: "#1B2438",
           },
           "& .MuiDataGrid-row:hover": {
-            backgroundColor: "#F8FAFC",
+            backgroundColor: "#1B2438",
           },
         }}
       />
@@ -197,7 +260,7 @@ function TituloTable({ rows, onBaixar, onCancelar, contraparteLabel }) {
       sx={{
         height: 560,
         borderRadius: 3,
-        border: "1px solid #E5E7EB",
+        border: "1px solid rgba(148, 163, 184, 0.14)",
         overflow: "hidden",
       }}
     >
@@ -216,10 +279,10 @@ function TituloTable({ rows, onBaixar, onCancelar, contraparteLabel }) {
         sx={{
           border: 0,
           "& .MuiDataGrid-columnHeaders": {
-            backgroundColor: "#F8FAFC",
+            backgroundColor: "#1B2438",
           },
           "& .MuiDataGrid-row:hover": {
-            backgroundColor: "#F8FAFC",
+            backgroundColor: "#1B2438",
           },
         }}
       />
@@ -233,8 +296,9 @@ function Financeiro() {
   const [openForm, setOpenForm] = useState(false);
 
   const [notasFiscais, setNotasFiscais] = useState([]);
-  const [notaFiscalParaEmitir, setNotaFiscalParaEmitir] = useState(null);
-  const [numeroControle, setNumeroControle] = useState("");
+  const [notaFiscalParaCancelar, setNotaFiscalParaCancelar] = useState(null);
+  const [justificativaCancelamento, setJustificativaCancelamento] =
+    useState("");
 
   const [mensagem, setMensagem] = useState("");
   const [tipoMensagem, setTipoMensagem] = useState("success");
@@ -315,15 +379,13 @@ function Financeiro() {
     }
   }
 
-  async function emitirNotaFiscal() {
+  async function emitirNotaFiscal(id) {
     try {
-      await notaFiscalService.emitir(notaFiscalParaEmitir.id, numeroControle);
-      setNotaFiscalParaEmitir(null);
-      setNumeroControle("");
+      await notaFiscalService.emitir(id);
       await carregarNotasFiscais();
 
       setTipoMensagem("success");
-      setMensagem("Nota fiscal emitida com sucesso.");
+      setMensagem("Emissão iniciada. Acompanhe o status na listagem.");
     } catch (error) {
       console.error("Erro ao emitir nota fiscal:", error);
 
@@ -331,14 +393,35 @@ function Financeiro() {
       setMensagem(
         error.response?.data?.message || "Erro ao emitir nota fiscal.",
       );
-
-      throw error;
     }
   }
 
-  async function cancelarNotaFiscal(id) {
+  async function atualizarStatusNotaFiscal(id) {
     try {
-      await notaFiscalService.cancelar(id);
+      await notaFiscalService.atualizarStatus(id);
+      await carregarNotasFiscais();
+
+      setTipoMensagem("success");
+      setMensagem("Status atualizado.");
+    } catch (error) {
+      console.error("Erro ao atualizar status da nota fiscal:", error);
+
+      setTipoMensagem("error");
+      setMensagem(
+        error.response?.data?.message || "Erro ao atualizar status.",
+      );
+    }
+  }
+
+  async function cancelarNotaFiscal() {
+    try {
+      await notaFiscalService.cancelar(
+        notaFiscalParaCancelar,
+        justificativaCancelamento,
+      );
+
+      setNotaFiscalParaCancelar(null);
+      setJustificativaCancelamento("");
       await carregarNotasFiscais();
 
       setTipoMensagem("success");
@@ -350,6 +433,8 @@ function Financeiro() {
       setMensagem(
         error.response?.data?.message || "Erro ao cancelar nota fiscal.",
       );
+
+      throw error;
     }
   }
 
@@ -392,15 +477,16 @@ function Financeiro() {
       {aba === "notas" && (
         <>
           <Alert severity="info" sx={{ mb: 2 }}>
-            Controle interno de nota fiscal — não emite nota fiscal real nem
-            se comunica com a SEFAZ. Para emissão fiscal de verdade, integre
-            um provedor (Focus NFe, eNotas etc.).
+            Notas de saída (vendas) são emitidas de verdade via Focus NFe —
+            configure o token em Empresas &gt; Integração Fiscal. Notas de
+            entrada (compras) continuam como controle interno simulado.
           </Alert>
 
           <NotaFiscalTable
             rows={notasFiscais}
-            onEmitir={setNotaFiscalParaEmitir}
-            onCancelar={cancelarNotaFiscal}
+            onEmitir={emitirNotaFiscal}
+            onAtualizarStatus={atualizarStatusNotaFiscal}
+            onCancelar={setNotaFiscalParaCancelar}
           />
         </>
       )}
@@ -412,19 +498,23 @@ function Financeiro() {
       />
 
       <BaseDialog
-        open={Boolean(notaFiscalParaEmitir)}
+        open={Boolean(notaFiscalParaCancelar)}
         onClose={() => {
-          setNotaFiscalParaEmitir(null);
-          setNumeroControle("");
+          setNotaFiscalParaCancelar(null);
+          setJustificativaCancelamento("");
         }}
-        onSave={emitirNotaFiscal}
-        title="Emitir Nota Fiscal"
+        onSave={cancelarNotaFiscal}
+        title="Cancelar Nota Fiscal"
       >
         <BaseFormField
-          label="Número de controle"
-          name="numero"
-          value={numeroControle}
-          onChange={(event) => setNumeroControle(event.target.value)}
+          label="Justificativa (mínimo 15 caracteres)"
+          name="justificativa"
+          value={justificativaCancelamento}
+          onChange={(event) =>
+            setJustificativaCancelamento(event.target.value)
+          }
+          multiline
+          minRows={3}
           required
         />
       </BaseDialog>

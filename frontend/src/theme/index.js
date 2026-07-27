@@ -2,22 +2,34 @@ import { createTheme } from "@mui/material/styles";
 
 const theme = createTheme({
   palette: {
-    mode: "light",
+    mode: "dark",
     primary: {
-      main: "#2563EB",
+      main: "#3B82F6",
     },
     secondary: {
-      main: "#059669",
+      main: "#7C3AED",
+    },
+    success: {
+      main: "#22C55E",
+    },
+    warning: {
+      main: "#F59E0B",
+    },
+    error: {
+      main: "#EF4444",
+    },
+    info: {
+      main: "#38BDF8",
     },
     background: {
-      default: "#F8FAFC",
-      paper: "#FFFFFF",
+      default: "#0B1220",
+      paper: "#141B2D",
     },
     text: {
-      primary: "#111827",
-      secondary: "#64748B",
+      primary: "#F1F5F9",
+      secondary: "#94A3B8",
     },
-    divider: "#E5E7EB",
+    divider: "rgba(148, 163, 184, 0.14)",
   },
 
   typography: {
@@ -32,6 +44,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundImage: "none",
+          border: "1px solid rgba(148, 163, 184, 0.14)",
           boxShadow: "0 10px 30px rgba(2, 6, 23, 0.45)",
         },
       },
@@ -41,6 +54,13 @@ const theme = createTheme({
         root: {
           backgroundImage: "none",
           boxShadow: "0 10px 30px rgba(2, 6, 23, 0.35)",
+        },
+      },
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          backgroundImage: "none",
         },
       },
     },

@@ -9,14 +9,37 @@ import {
   MenuItem,
 } from "@mui/material";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import NotificacaoBell from "../NotificacaoBell/NotificacaoBell";
 
 const drawerWidth = 260;
 
+const TITULOS_POR_ROTA = {
+  "/dashboard": "Dashboard",
+  "/crm": "CRM",
+  "/clientes": "Clientes",
+  "/vendas": "Vendas",
+  "/compras": "Compras",
+  "/fornecedores": "Fornecedores",
+  "/produtos": "Produtos",
+  "/estoque": "Estoque",
+  "/wms": "WMS",
+  "/transportes": "Transportes",
+  "/financeiro": "Financeiro",
+  "/rh": "RH",
+  "/metas": "Metas",
+  "/relatorios": "Relatórios",
+  "/auditoria": "Auditoria",
+  "/usuarios": "Usuários",
+  "/empresas": "Empresas",
+  "/configuracoes": "Configurações",
+};
+
 function Header() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const titulo = TITULOS_POR_ROTA[location.pathname] || "Dashboard";
 
   const {
     user,
@@ -59,12 +82,13 @@ function Header() {
   return (
     <AppBar
       position="fixed"
-      elevation={1}
+      elevation={0}
       sx={{
         width: `calc(100% - ${drawerWidth}px)`,
         ml: `${drawerWidth}px`,
-        bgcolor: "#FFFFFF",
-        color: "#111827",
+        bgcolor: "#141B2D",
+        color: "#F1F5F9",
+        borderBottom: "1px solid rgba(148, 163, 184, 0.14)",
       }}
     >
       <Toolbar
@@ -77,7 +101,7 @@ function Header() {
           variant="h6"
           fontWeight={600}
         >
-          Dashboard
+          {titulo}
         </Typography>
 
         <Box
@@ -110,7 +134,7 @@ function Header() {
               variant="body1"
               fontWeight={600}
             >
-              {user?.name}
+              {user?.nome}
             </Typography>
 
             <Typography

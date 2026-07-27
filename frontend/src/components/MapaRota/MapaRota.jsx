@@ -27,7 +27,7 @@ function MapaRota({ latitude, longitude, trilha = [] }) {
       />
 
       {pontosTrilha.length > 1 && (
-        <Polyline positions={pontosTrilha} color="#2563EB" />
+        <Polyline positions={pontosTrilha} color="#3B82F6" />
       )}
 
       <Marker position={centro} icon={iconePadrao}>

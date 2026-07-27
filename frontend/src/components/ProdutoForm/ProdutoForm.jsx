@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Grid } from "@mui/material";
+import { Divider, Grid, Typography } from "@mui/material";
 
 import BaseDialog from "../BaseDialog/BaseDialog";
 import BaseFormField from "../BaseFormField/BaseFormField";
@@ -17,6 +17,10 @@ const initialState = {
   estoqueMinimo: "",
   zonaId: "",
   endereco: "",
+  ncm: "",
+  cfop: "5102",
+  origem: "0",
+  cest: "",
 };
 
 function ProdutoForm({
@@ -150,6 +154,50 @@ function ProdutoForm({
             label="Endereço"
             name="endereco"
             value={form.endereco}
+            onChange={handleChange}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12 }}>
+          <Divider sx={{ my: 1 }} />
+          <Typography variant="subtitle2" color="text.secondary">
+            Dados fiscais (necessários para emitir NF-e)
+          </Typography>
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 3 }}>
+          <BaseFormField
+            label="NCM"
+            name="ncm"
+            value={form.ncm}
+            onChange={handleChange}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 3 }}>
+          <BaseFormField
+            label="CFOP"
+            name="cfop"
+            value={form.cfop}
+            onChange={handleChange}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 3 }}>
+          <BaseFormField
+            label="Origem (0-8)"
+            name="origem"
+            type="number"
+            value={form.origem}
+            onChange={handleChange}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 3 }}>
+          <BaseFormField
+            label="CEST (opcional)"
+            name="cest"
+            value={form.cest}
             onChange={handleChange}
           />
         </Grid>

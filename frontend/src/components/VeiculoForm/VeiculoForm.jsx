@@ -4,12 +4,14 @@ import { Grid } from "@mui/material";
 
 import BaseDialog from "../BaseDialog/BaseDialog";
 import BaseFormField from "../BaseFormField/BaseFormField";
+import BaseSelect from "../BaseSelect/BaseSelect";
 
 const initialState = {
   placa: "",
   modelo: "",
   capacidade: "",
   kmMedioPorLitro: "",
+  status: "disponivel",
 };
 
 function VeiculoForm({ open, onClose, onSave, veiculo }) {
@@ -17,7 +19,7 @@ function VeiculoForm({ open, onClose, onSave, veiculo }) {
 
   useEffect(() => {
     if (veiculo) {
-      setForm(veiculo);
+      setForm({ ...initialState, ...veiculo });
     } else {
       setForm(initialState);
     }
@@ -77,13 +79,26 @@ function VeiculoForm({ open, onClose, onSave, veiculo }) {
           />
         </Grid>
 
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <BaseFormField
             label="Km médio por litro"
             name="kmMedioPorLitro"
             type="number"
             value={form.kmMedioPorLitro}
             onChange={handleChange}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 6 }}>
+          <BaseSelect
+            label="Status"
+            name="status"
+            value={form.status}
+            onChange={handleChange}
+            options={[
+              { value: "disponivel", label: "Disponível" },
+              { value: "manutencao", label: "Em manutenção" },
+            ]}
           />
         </Grid>
       </Grid>

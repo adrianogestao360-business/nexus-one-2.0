@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Button, Chip, Paper, Stack, Typography } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 
@@ -142,7 +142,7 @@ function Auditoria() {
 
       <Paper
         elevation={0}
-        sx={{ height: 560, borderRadius: 3, border: "1px solid #E5E7EB", overflow: "hidden" }}
+        sx={{ height: 560, borderRadius: 3, border: "1px solid rgba(148, 163, 184, 0.14)", overflow: "hidden" }}
       >
         <DataGrid
           rows={linhas}
@@ -152,8 +152,8 @@ function Auditoria() {
           initialState={{ pagination: { paginationModel: { pageSize: 20 } } }}
           sx={{
             border: 0,
-            "& .MuiDataGrid-columnHeaders": { backgroundColor: "#F8FAFC" },
-            "& .MuiDataGrid-row:hover": { backgroundColor: "#F8FAFC" },
+            "& .MuiDataGrid-columnHeaders": { backgroundColor: "#1B2438" },
+            "& .MuiDataGrid-row:hover": { backgroundColor: "#1B2438" },
           }}
         />
       </Paper>

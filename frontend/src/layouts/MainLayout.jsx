@@ -16,7 +16,7 @@ function MainLayout({ children }) {
           display: "flex",
           flexDirection: "column",
           flexGrow: 1,
-          bgcolor: "#F8FAFC",
+          bgcolor: "#0B1220",
           minHeight: "100vh",
         }}
       >

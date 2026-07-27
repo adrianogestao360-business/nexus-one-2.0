@@ -14,6 +14,11 @@ const vendaService = {
   cancelar: async (id) => {
     await api.delete(`/vendas/${id}`);
   },
+
+  devolver: async (id, dados) => {
+    const response = await api.post(`/vendas/${id}/devolucoes`, dados);
+    return response.data;
+  },
 };
 
 export default vendaService;

@@ -23,7 +23,15 @@ class NotaFiscalController {
     const notaFiscal = await NotaFiscalService.emitir(
       Number(req.params.id),
       req.usuario.empresaId,
-      req.body.numero,
+    );
+
+    return res.status(202).json(notaFiscal);
+  }
+
+  async atualizarStatus(req, res) {
+    const notaFiscal = await NotaFiscalService.atualizarStatus(
+      Number(req.params.id),
+      req.usuario.empresaId,
     );
 
     return res.json(notaFiscal);
@@ -33,6 +41,7 @@ class NotaFiscalController {
     const notaFiscal = await NotaFiscalService.cancelar(
       Number(req.params.id),
       req.usuario.empresaId,
+      req.body?.justificativa,
     );
 
     return res.json(notaFiscal);

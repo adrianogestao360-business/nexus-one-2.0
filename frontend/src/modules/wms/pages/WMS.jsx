@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import {
   Alert,
   Button,
@@ -121,7 +121,7 @@ function SeparacaoTable({ rows, userId, onAssumir, onAbrir, onExpedirClick }) {
       sx={{
         height: 560,
         borderRadius: 3,
-        border: "1px solid #E5E7EB",
+        border: "1px solid rgba(148, 163, 184, 0.14)",
         overflow: "hidden",
       }}
     >
@@ -140,10 +140,10 @@ function SeparacaoTable({ rows, userId, onAssumir, onAbrir, onExpedirClick }) {
         sx={{
           border: 0,
           "& .MuiDataGrid-columnHeaders": {
-            backgroundColor: "#F8FAFC",
+            backgroundColor: "#1B2438",
           },
           "& .MuiDataGrid-row:hover": {
-            backgroundColor: "#F8FAFC",
+            backgroundColor: "#1B2438",
           },
         }}
       />
@@ -395,7 +395,7 @@ function WMS() {
       {aba === "zonas" && (
         <Paper
           elevation={0}
-          sx={{ p: 2, borderRadius: 3, border: "1px solid #E5E7EB" }}
+          sx={{ p: 2, borderRadius: 3, border: "1px solid rgba(148, 163, 184, 0.14)" }}
         >
           <Stack spacing={1}>
             {zonas.map((zona) => (
@@ -414,7 +414,7 @@ function WMS() {
       {aba === "localizacoes" && (
         <Paper
           elevation={0}
-          sx={{ p: 2, borderRadius: 3, border: "1px solid #E5E7EB" }}
+          sx={{ p: 2, borderRadius: 3, border: "1px solid rgba(148, 163, 184, 0.14)" }}
         >
           <Stack spacing={1}>
             {localizacoes.map((localizacao) => (
