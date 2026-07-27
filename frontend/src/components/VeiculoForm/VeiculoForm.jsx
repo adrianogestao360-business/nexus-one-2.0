@@ -9,6 +9,7 @@ const initialState = {
   placa: "",
   modelo: "",
   capacidade: "",
+  kmMedioPorLitro: "",
 };
 
 function VeiculoForm({ open, onClose, onSave, veiculo }) {
@@ -72,6 +73,16 @@ function VeiculoForm({ open, onClose, onSave, veiculo }) {
             label="Capacidade"
             name="capacidade"
             value={form.capacidade}
+            onChange={handleChange}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 4 }}>
+          <BaseFormField
+            label="Km médio por litro"
+            name="kmMedioPorLitro"
+            type="number"
+            value={form.kmMedioPorLitro}
             onChange={handleChange}
           />
         </Grid>

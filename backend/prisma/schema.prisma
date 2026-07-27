@@ -37,6 +37,8 @@ model Empresa {
   estoquesLocalizacao EstoqueLocalizacao[]
   oportunidades Oportunidade[]
   logsAuditoria LogAuditoria[]
+  rotas         Rota[]
+  abastecimentos Abastecimento[]
 }
 
 model Usuario {
@@ -415,17 +417,20 @@ model SeparacaoItem {
 }
 
 model Veiculo {
-  id         Int      @id @default(autoincrement())
-  placa      String
-  modelo     String
-  capacidade String?
-  ativo      Boolean  @default(true)
-  empresaId  Int
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id             Int      @id @default(autoincrement())
+  placa          String
+  modelo         String
+  capacidade     String?
+  kmMedioPorLitro Decimal? @db.Decimal(6, 2)
+  ativo          Boolean  @default(true)
+  empresaId      Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  empresa  Empresa   @relation(fields: [empresaId], references: [id])
-  entregas Entrega[]
+  empresa        Empresa         @relation(fields: [empresaId], references: [id])
+  entregas       Entrega[]
+  rotas          Rota[]
+  abastecimentos Abastecimento[]
 
   @@unique([empresaId, placa])
   @@index([empresaId])
@@ -443,8 +448,59 @@ model Motorista {
 
   empresa  Empresa   @relation(fields: [empresaId], references: [id])
   entregas Entrega[]
+  rotas    Rota[]
 
   @@index([empresaId])
+}
+
+model Rota {
+  id              Int       @id @default(autoincrement())
+  empresaId       Int
+  veiculoId       Int
+  motoristaId     Int
+  status          String    @default("em_andamento")
+  tokenRastreio   String    @unique
+  kmPercorrido    Decimal?  @db.Decimal(10, 2)
+  custoEstimado   Decimal?  @db.Decimal(10, 2)
+  ultimaLatitude  Float?
+  ultimaLongitude Float?
+  ultimaPosicaoEm DateTime?
+  iniciadaEm      DateTime  @default(now())
+  concluidaEm     DateTime?
+
+  empresa   Empresa            @relation(fields: [empresaId], references: [id])
+  veiculo   Veiculo            @relation(fields: [veiculoId], references: [id])
+  motorista Motorista          @relation(fields: [motoristaId], references: [id])
+  entregas  Entrega[]
+  posicoes  PosicaoMotorista[]
+
+  @@index([empresaId])
+}
+
+model PosicaoMotorista {
+  id           Int      @id @default(autoincrement())
+  rotaId       Int
+  latitude     Float
+  longitude    Float
+  registradoEm DateTime @default(now())
+
+  rota Rota @relation(fields: [rotaId], references: [id])
+
+  @@index([rotaId])
+}
+
+model Abastecimento {
+  id         Int      @id @default(autoincrement())
+  veiculoId  Int
+  empresaId  Int
+  valorLitro Decimal  @db.Decimal(8, 3)
+  litros     Decimal? @db.Decimal(8, 2)
+  createdAt  DateTime @default(now())
+
+  veiculo Veiculo @relation(fields: [veiculoId], references: [id])
+  empresa Empresa @relation(fields: [empresaId], references: [id])
+
+  @@index([veiculoId])
 }
 
 model Entrega {
@@ -453,6 +509,7 @@ model Entrega {
   veiculoId   Int
   motoristaId Int
   empresaId   Int
+  rotaId      Int?
   status      String    @default("em_rota")
   dataSaida   DateTime  @default(now())
   dataEntrega DateTime?
@@ -462,6 +519,7 @@ model Entrega {
   veiculo   Veiculo   @relation(fields: [veiculoId], references: [id])
   motorista Motorista @relation(fields: [motoristaId], references: [id])
   empresa   Empresa   @relation(fields: [empresaId], references: [id])
+  rota      Rota?     @relation(fields: [rotaId], references: [id])
 
   @@index([empresaId])
 }

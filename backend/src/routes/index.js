@@ -23,6 +23,9 @@ const NotaFiscalController = require("../controllers/NotaFiscalController");
 const DashboardController = require("../controllers/DashboardController");
 const OportunidadeController = require("../controllers/OportunidadeController");
 const AuditoriaController = require("../controllers/AuditoriaController");
+const RotaController = require("../controllers/RotaController");
+const RastreioController = require("../controllers/RastreioController");
+const AbastecimentoController = require("../controllers/AbastecimentoController");
 
 const AuthMiddleware = require("../middlewares/AuthMiddleware");
 const PermissionMiddleware = require("../middlewares/PermissionMiddleware");
@@ -384,6 +387,18 @@ router.delete(
   VeiculoController.destroy,
 );
 
+router.get(
+  "/veiculos/:veiculoId/abastecimentos",
+  AuthMiddleware.handle,
+  AbastecimentoController.index,
+);
+router.post(
+  "/veiculos/:veiculoId/abastecimentos",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("frota.gerenciar"),
+  AbastecimentoController.store,
+);
+
 router.get("/motoristas", AuthMiddleware.handle, MotoristaController.index);
 router.get(
   "/motoristas/:id",
@@ -416,6 +431,30 @@ router.post(
   AuthMiddleware.handle,
   PermissionMiddleware.handle("frota.gerenciar"),
   EntregaController.confirmar,
+);
+
+router.get("/rotas", AuthMiddleware.handle, RotaController.index);
+router.get("/rotas/:id", AuthMiddleware.handle, RotaController.show);
+router.post(
+  "/rotas",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("frota.gerenciar"),
+  RotaController.store,
+);
+router.post(
+  "/rotas/:id/concluir",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("frota.gerenciar"),
+  RotaController.concluir,
+);
+
+// Rotas públicas de rastreio — autenticadas pelo token da rota, não por JWT.
+// Usadas pela página que o motorista abre no celular (sem login no sistema).
+router.get("/rastreio/:token", RastreioController.show);
+router.post("/rastreio/:token/posicao", RastreioController.registrarPosicao);
+router.post(
+  "/rastreio/:token/entregas/:entregaId/confirmar",
+  RastreioController.confirmarEntrega,
 );
 
 router.get(

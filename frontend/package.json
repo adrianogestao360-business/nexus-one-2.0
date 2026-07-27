@@ -19,9 +19,11 @@
     "@mui/x-data-grid": "^9.10.1",
     "@tanstack/react-query": "^5.101.4",
     "axios": "^1.18.1",
+    "leaflet": "^1.9.4",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-hook-form": "^7.83.0",
+    "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.18.1",
     "valibot": "^1.4.2",
     "zod": "^4.4.3"

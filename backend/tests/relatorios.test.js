@@ -81,7 +81,11 @@ describe("Relatórios: filtros", () => {
     const { token } = await criarEmpresaComAdmin();
     const venda = await criarVendaCancelada(token);
 
-    const hoje = new Date().toISOString().slice(0, 10);
+    // data de "hoje" no calendário local (não UTC) — o filtro do backend
+    // interpreta dataInicio/dataFim como data local, igual a um usuário
+    // digitando a data num formulário
+    const agora = new Date();
+    const hoje = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, "0")}-${String(agora.getDate()).padStart(2, "0")}`;
 
     const response = await request(app)
       .get(`/vendas?dataInicio=${hoje}&dataFim=${hoje}`)
@@ -104,7 +108,8 @@ describe("Relatórios: filtros", () => {
         vencimento: "2026-08-15",
       });
 
-    const hoje = new Date().toISOString().slice(0, 10);
+    const agora = new Date();
+    const hoje = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, "0")}-${String(agora.getDate()).padStart(2, "0")}`;
 
     const response = await request(app)
       .get(

@@ -1,3 +1,5 @@
+const crypto = require("crypto");
+
 const prisma = require("../config/prisma");
 
 const SeparacaoRepository = require("../repositories/SeparacaoRepository");
@@ -131,8 +133,8 @@ class SeparacaoService {
       throw error;
     }
 
-    const [separacaoAtualizada] = await prisma.$transaction([
-      prisma.separacao.update({
+    const separacaoAtualizada = await prisma.$transaction(async (tx) => {
+      const atualizada = await tx.separacao.update({
         where: {
           id,
         },
@@ -140,16 +142,29 @@ class SeparacaoService {
           status: "expedido",
           expedidoEm: new Date(),
         },
-      }),
-      prisma.entrega.create({
+      });
+
+      const rota = await tx.rota.create({
+        data: {
+          empresaId,
+          veiculoId: veiculo.id,
+          motoristaId: motorista.id,
+          tokenRastreio: crypto.randomUUID(),
+        },
+      });
+
+      await tx.entrega.create({
         data: {
           separacaoId: id,
           veiculoId: veiculo.id,
           motoristaId: motorista.id,
           empresaId,
+          rotaId: rota.id,
         },
-      }),
-    ]);
+      });
+
+      return atualizada;
+    });
 
     return SeparacaoRepository.findById(separacaoAtualizada.id, empresaId);
   }

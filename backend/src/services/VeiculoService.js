@@ -36,7 +36,7 @@ class VeiculoService {
   }
 
   #sanitizar(data) {
-    const { placa, modelo, capacidade } = data;
+    const { placa, modelo, capacidade, kmMedioPorLitro } = data;
 
     if (!placa || !modelo) {
       const error = new Error("Placa e modelo são obrigatórios.");
@@ -48,6 +48,10 @@ class VeiculoService {
       placa,
       modelo,
       capacidade: capacidade || null,
+      kmMedioPorLitro:
+        kmMedioPorLitro !== undefined && kmMedioPorLitro !== ""
+          ? Number(kmMedioPorLitro)
+          : null,
     };
   }
 

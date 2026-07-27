@@ -17,6 +17,7 @@ import Configuracoes from "../modules/configuracoes/pages/Configuracoes";
 import Relatorios from "../modules/relatorios/pages/Relatorios";
 import CRM from "../modules/crm/pages/CRM";
 import Auditoria from "../modules/auditoria/pages/Auditoria";
+import Rastreio from "../pages/Rastreio/Rastreio";
 
 import PrivateRoute from "./PrivateRoute";
 
@@ -25,6 +26,8 @@ function AppRoutes() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
+
+        <Route path="/rastreio/:token" element={<Rastreio />} />
 
         <Route
           path="/dashboard"
