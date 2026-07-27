@@ -11,6 +11,7 @@ import {
 
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import NotificacaoBell from "../NotificacaoBell/NotificacaoBell";
 
 const drawerWidth = 260;
 
@@ -101,6 +102,8 @@ function Header() {
               ))}
             </Select>
           )}
+
+          <NotificacaoBell />
 
           <Box sx={{ textAlign: "right" }}>
             <Typography

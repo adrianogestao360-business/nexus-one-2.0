@@ -74,16 +74,14 @@ class UsuarioRepository {
   }
 
   async criar(data) {
-    const { papelId, ...usuario } = data;
+    const { papelIds, ...usuario } = data;
 
     return prisma.usuario.create({
       data: {
         ...usuario,
-        usuarioPapeis: papelId
+        usuarioPapeis: papelIds?.length
           ? {
-              create: {
-                papelId,
-              },
+              create: papelIds.map((papelId) => ({ papelId })),
             }
           : undefined,
       },
@@ -91,7 +89,7 @@ class UsuarioRepository {
   }
 
   async atualizar(id, data) {
-    const { papelId, ...usuario } = data;
+    const { papelIds, ...usuario } = data;
 
     return prisma.usuario.update({
       where: {
@@ -99,12 +97,10 @@ class UsuarioRepository {
       },
       data: {
         ...usuario,
-        usuarioPapeis: papelId
+        usuarioPapeis: papelIds
           ? {
               deleteMany: {},
-              create: {
-                papelId,
-              },
+              create: papelIds.map((papelId) => ({ papelId })),
             }
           : undefined,
       },

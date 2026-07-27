@@ -11,7 +11,7 @@ const initialState = {
   nome: "",
   email: "",
   senha: "",
-  papelId: "",
+  papelIds: [],
 };
 
 function UsuarioForm({ open, onClose, onSave, usuario }) {
@@ -32,7 +32,7 @@ function UsuarioForm({ open, onClose, onSave, usuario }) {
         nome: usuario.nome,
         email: usuario.email,
         senha: "",
-        papelId: usuario.papeis?.[0]?.id || "",
+        papelIds: usuario.papeis?.map((papel) => papel.id) || [],
       });
     } else {
       setForm(initialState);
@@ -49,10 +49,7 @@ function UsuarioForm({ open, onClose, onSave, usuario }) {
   }
 
   async function handleSave() {
-    await onSave({
-      ...form,
-      papelId: form.papelId || null,
-    });
+    await onSave(form);
 
     setForm(initialState);
 
@@ -105,10 +102,11 @@ function UsuarioForm({ open, onClose, onSave, usuario }) {
 
         <Grid size={{ xs: 12, md: 6 }}>
           <BaseSelect
-            label="Papel"
-            name="papelId"
-            value={form.papelId}
+            label="Papéis"
+            name="papelIds"
+            value={form.papelIds}
             onChange={handleChange}
+            multiple
             options={papeis.map((papel) => ({
               value: papel.id,
               label: papel.nome,

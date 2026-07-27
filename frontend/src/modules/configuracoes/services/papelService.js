@@ -27,6 +27,10 @@ const papelService = {
     });
     return response.data;
   },
+
+  excluir: async (id) => {
+    await api.delete(`/papeis/${id}`);
+  },
 };
 
 export default papelService;

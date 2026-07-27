@@ -70,6 +70,7 @@ class ProdutoService {
       unidade,
       preco,
       estoque,
+      estoqueMinimo,
       zonaId,
       endereco,
     } = data;
@@ -87,6 +88,10 @@ class ProdutoService {
       unidade: unidade || null,
       preco: preco !== undefined && preco !== "" ? Number(preco) : 0,
       estoque: estoque !== undefined && estoque !== "" ? Number(estoque) : 0,
+      estoqueMinimo:
+        estoqueMinimo !== undefined && estoqueMinimo !== ""
+          ? Number(estoqueMinimo)
+          : 5,
       zonaId: zonaId ? Number(zonaId) : null,
       endereco: endereco || null,
     };

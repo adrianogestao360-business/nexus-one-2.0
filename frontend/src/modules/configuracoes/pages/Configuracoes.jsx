@@ -15,6 +15,7 @@ import {
 import { DataGrid } from "@mui/x-data-grid";
 import EditIcon from "@mui/icons-material/Edit";
 import SecurityIcon from "@mui/icons-material/Security";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 import BasePage from "../../../components/BasePage/BasePage";
 import BaseDialog from "../../../components/BaseDialog/BaseDialog";
@@ -102,6 +103,21 @@ function Configuracoes() {
       setMensagem(error.response?.data?.message || "Erro ao salvar papel.");
 
       throw error;
+    }
+  }
+
+  async function excluirPapel(id) {
+    try {
+      await papelService.excluir(id);
+      await carregarPapeis();
+
+      setTipoMensagem("success");
+      setMensagem("Papel excluído com sucesso.");
+    } catch (error) {
+      console.error("Erro ao excluir papel:", error);
+
+      setTipoMensagem("error");
+      setMensagem(error.response?.data?.message || "Erro ao excluir papel.");
     }
   }
 
@@ -225,6 +241,14 @@ function Configuracoes() {
             onClick={() => abrirPermissoes(params.row)}
           >
             <SecurityIcon fontSize="small" />
+          </IconButton>
+
+          <IconButton
+            size="small"
+            color="error"
+            onClick={() => excluirPapel(params.row.id)}
+          >
+            <DeleteIcon fontSize="small" />
           </IconButton>
         </Stack>
       ),

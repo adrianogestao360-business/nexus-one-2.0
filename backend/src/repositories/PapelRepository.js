@@ -46,6 +46,22 @@ class PapelRepository {
     });
   }
 
+  async contarUsuariosVinculados(id) {
+    return prisma.usuarioPapel.count({
+      where: {
+        papelId: id,
+      },
+    });
+  }
+
+  async excluir(id) {
+    return prisma.papel.delete({
+      where: {
+        id,
+      },
+    });
+  }
+
   async sincronizarPermissoes(id, permissaoIds) {
     await prisma.$transaction([
       prisma.papelPermissao.deleteMany({

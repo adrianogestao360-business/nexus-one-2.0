@@ -39,6 +39,11 @@ model Empresa {
   logsAuditoria LogAuditoria[]
   rotas         Rota[]
   abastecimentos Abastecimento[]
+  cargos        Cargo[]
+  funcionarios  Funcionario[]
+  folhasPagamento FolhaPagamento[]
+  notificacoesLidas NotificacaoLida[]
+  metasVenda    MetaVenda[]
 }
 
 model Usuario {
@@ -51,11 +56,14 @@ model Usuario {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  empresa       Empresa        @relation(fields: [empresaId], references: [id])
-  usuarioPapeis UsuarioPapel[]
-  refreshTokens RefreshToken[]
-  separacoes    Separacao[]
-  logsAuditoria LogAuditoria[]
+  empresa            Empresa             @relation(fields: [empresaId], references: [id])
+  usuarioPapeis      UsuarioPapel[]
+  refreshTokens      RefreshToken[]
+  separacoes         Separacao[]
+  logsAuditoria      LogAuditoria[]
+  notificacoesLidas  NotificacaoLida[]
+  vendasComoVendedor Venda[]
+  metasVenda         MetaVenda[]
 
   @@index([empresaId])
 }
@@ -148,6 +156,7 @@ model Produto {
   unidade   String?
   preco     Decimal  @default(0) @db.Decimal(12, 2)
   estoque   Int      @default(0)
+  estoqueMinimo Int  @default(5)
   ativo     Boolean  @default(true)
   empresaId Int
   zonaId    Int?
@@ -223,17 +232,19 @@ model Fornecedor {
 }
 
 model Venda {
-  id        Int      @id @default(autoincrement())
-  clienteId Int
-  empresaId Int
-  total     Decimal  @default(0) @db.Decimal(12, 2)
-  status    String   @default("confirmada")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         Int      @id @default(autoincrement())
+  clienteId  Int
+  empresaId  Int
+  vendedorId Int?
+  total      Decimal  @default(0) @db.Decimal(12, 2)
+  status     String   @default("confirmada")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  empresa Empresa     @relation(fields: [empresaId], references: [id])
-  cliente Cliente     @relation(fields: [clienteId], references: [id])
-  itens   VendaItem[]
+  empresa  Empresa  @relation(fields: [empresaId], references: [id])
+  cliente  Cliente  @relation(fields: [clienteId], references: [id])
+  vendedor Usuario? @relation(fields: [vendedorId], references: [id])
+  itens    VendaItem[]
   titulos Titulo[]
   movimentos MovimentoEstoque[]
   separacao  Separacao?
@@ -304,14 +315,16 @@ model Titulo {
   compraId      Int?
   parcela       Int?
   totalParcelas Int?
+  folhaPagamentoItemId Int?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  empresa    Empresa     @relation(fields: [empresaId], references: [id])
-  cliente    Cliente?    @relation(fields: [clienteId], references: [id])
-  fornecedor Fornecedor? @relation(fields: [fornecedorId], references: [id])
-  venda      Venda?      @relation(fields: [vendaId], references: [id])
-  compra     Compra?     @relation(fields: [compraId], references: [id])
+  empresa            Empresa             @relation(fields: [empresaId], references: [id])
+  cliente            Cliente?            @relation(fields: [clienteId], references: [id])
+  fornecedor         Fornecedor?         @relation(fields: [fornecedorId], references: [id])
+  venda              Venda?              @relation(fields: [vendaId], references: [id])
+  compra             Compra?             @relation(fields: [compraId], references: [id])
+  folhaPagamentoItem FolhaPagamentoItem? @relation(fields: [folhaPagamentoItemId], references: [id])
 
   @@index([empresaId])
 }
@@ -540,5 +553,103 @@ model NotaFiscal {
   venda   Venda?  @relation(fields: [vendaId], references: [id])
   compra  Compra? @relation(fields: [compraId], references: [id])
 
+  @@index([empresaId])
+}
+
+model Cargo {
+  id          Int      @id @default(autoincrement())
+  nome        String
+  descricao   String?
+  ativo       Boolean  @default(true)
+  empresaId   Int
+  createdAt   DateTime @default(now())
+
+  empresa      Empresa       @relation(fields: [empresaId], references: [id])
+  funcionarios Funcionario[]
+
+  @@unique([empresaId, nome])
+  @@index([empresaId])
+}
+
+model Funcionario {
+  id            Int       @id @default(autoincrement())
+  nome          String
+  cargoId       Int?
+  salarioBase   Decimal   @db.Decimal(12, 2)
+  dataAdmissao  DateTime  @default(now())
+  email         String?
+  telefone      String?
+  ativo         Boolean   @default(true)
+  empresaId     Int
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  empresa           Empresa             @relation(fields: [empresaId], references: [id])
+  cargo             Cargo?              @relation(fields: [cargoId], references: [id])
+  itensFolha        FolhaPagamentoItem[]
+
+  @@index([empresaId])
+}
+
+model FolhaPagamento {
+  id             Int       @id @default(autoincrement())
+  mes            Int
+  ano            Int
+  status         String    @default("aberta")
+  empresaId      Int
+  fechadaEm      DateTime?
+  createdAt      DateTime  @default(now())
+
+  empresa Empresa              @relation(fields: [empresaId], references: [id])
+  itens   FolhaPagamentoItem[]
+
+  @@unique([empresaId, mes, ano])
+  @@index([empresaId])
+}
+
+model FolhaPagamentoItem {
+  id             Int      @id @default(autoincrement())
+  folhaId        Int
+  funcionarioId  Int
+  proventos      Decimal  @db.Decimal(12, 2)
+  descontos      Decimal  @default(0) @db.Decimal(12, 2)
+  valorLiquido   Decimal  @db.Decimal(12, 2)
+
+  folha       FolhaPagamento @relation(fields: [folhaId], references: [id])
+  funcionario Funcionario    @relation(fields: [funcionarioId], references: [id])
+  titulos     Titulo[]
+
+  @@unique([folhaId, funcionarioId])
+}
+
+model NotificacaoLida {
+  id        Int      @id @default(autoincrement())
+  usuarioId Int
+  empresaId Int
+  chave     String
+  lidaEm    DateTime @default(now())
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+  empresa Empresa @relation(fields: [empresaId], references: [id])
+
+  @@unique([usuarioId, chave])
+  @@index([empresaId])
+}
+
+model MetaVenda {
+  id                 Int      @id @default(autoincrement())
+  empresaId          Int
+  usuarioId          Int
+  mes                Int
+  ano                Int
+  valorMeta          Decimal  @db.Decimal(12, 2)
+  percentualComissao Decimal  @db.Decimal(5, 2)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  empresa Empresa @relation(fields: [empresaId], references: [id])
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@unique([usuarioId, mes, ano])
   @@index([empresaId])
 }

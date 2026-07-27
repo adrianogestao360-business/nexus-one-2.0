@@ -22,7 +22,7 @@ class VendaService {
     return venda;
   }
 
-  async criar(data, empresaId) {
+  async criar(data, empresaId, vendedorId) {
     const { clienteId, itens, parcelas } = data;
 
     if (!clienteId || !Array.isArray(itens) || itens.length === 0) {
@@ -110,6 +110,7 @@ class VendaService {
         data: {
           clienteId: Number(clienteId),
           empresaId,
+          vendedorId: vendedorId || null,
           total,
           itens: {
             create: itensCriar,

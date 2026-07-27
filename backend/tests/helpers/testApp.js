@@ -3,24 +3,11 @@ const request = require("supertest");
 
 const app = require("../../src/app");
 const prisma = require("../../src/config/prisma");
+const {
+  CODIGOS_PERMISSOES_PADRAO,
+} = require("../../src/constants/permissoes");
 
-const TODAS_PERMISSOES = [
-  "empresas.gerenciar",
-  "usuarios.gerenciar",
-  "produtos.gerenciar",
-  "clientes.gerenciar",
-  "fornecedores.gerenciar",
-  "vendas.gerenciar",
-  "compras.gerenciar",
-  "financeiro.gerenciar",
-  "estoque.gerenciar",
-  "wms.gerenciar",
-  "frota.gerenciar",
-  "papeis.gerenciar",
-  "notas-fiscais.gerenciar",
-  "crm.gerenciar",
-  "auditoria.visualizar",
-];
+const TODAS_PERMISSOES = CODIGOS_PERMISSOES_PADRAO;
 
 let contador = 0;
 

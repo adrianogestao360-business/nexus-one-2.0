@@ -29,6 +29,23 @@ class PapelService {
     return PapelRepository.atualizar(id, dados);
   }
 
+  async excluir(id, empresaId) {
+    await this.buscarPorId(id, empresaId);
+
+    const usuariosVinculados =
+      await PapelRepository.contarUsuariosVinculados(id);
+
+    if (usuariosVinculados > 0) {
+      const error = new Error(
+        "Não é possível excluir um papel com usuários vinculados.",
+      );
+      error.status = 400;
+      throw error;
+    }
+
+    return PapelRepository.excluir(id);
+  }
+
   async definirPermissoes(id, permissaoIds, empresaId) {
     await this.buscarPorId(id, empresaId);
 

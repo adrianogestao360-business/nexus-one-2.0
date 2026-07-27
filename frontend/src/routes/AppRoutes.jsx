@@ -17,6 +17,8 @@ import Configuracoes from "../modules/configuracoes/pages/Configuracoes";
 import Relatorios from "../modules/relatorios/pages/Relatorios";
 import CRM from "../modules/crm/pages/CRM";
 import Auditoria from "../modules/auditoria/pages/Auditoria";
+import RH from "../modules/rh/pages/RH";
+import Metas from "../modules/metas/pages/Metas";
 import Rastreio from "../pages/Rastreio/Rastreio";
 
 import PrivateRoute from "./PrivateRoute";
@@ -169,6 +171,24 @@ function AppRoutes() {
           element={
             <PrivateRoute>
               <Auditoria />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/rh"
+          element={
+            <PrivateRoute>
+              <RH />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/metas"
+          element={
+            <PrivateRoute>
+              <Metas />
             </PrivateRoute>
           }
         />

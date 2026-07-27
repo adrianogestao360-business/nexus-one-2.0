@@ -1,4 +1,6 @@
+const prisma = require("../config/prisma");
 const EmpresaRepository = require("../repositories/EmpresaRepository");
+const { CODIGOS_PERMISSOES_PADRAO } = require("../constants/permissoes");
 
 class EmpresaService {
   async listar() {
@@ -18,7 +20,31 @@ class EmpresaService {
   async criar(data) {
     const dados = this.#sanitizar(data);
 
-    return EmpresaRepository.create(dados);
+    return prisma.$transaction(async (tx) => {
+      const empresa = await tx.empresa.create({ data: dados });
+
+      const papel = await tx.papel.create({
+        data: {
+          nome: "Administrador",
+          descricao: "Acesso administrativo ao Nexus One ERP",
+          empresaId: empresa.id,
+        },
+      });
+
+      for (const codigo of CODIGOS_PERMISSOES_PADRAO) {
+        const permissao = await tx.permissao.upsert({
+          where: { codigo },
+          update: {},
+          create: { codigo },
+        });
+
+        await tx.papelPermissao.create({
+          data: { papelId: papel.id, permissaoId: permissao.id },
+        });
+      }
+
+      return empresa;
+    });
   }
 
   async atualizar(id, data) {

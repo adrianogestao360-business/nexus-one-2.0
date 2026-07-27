@@ -26,6 +26,8 @@ import {
   Assessment,
   Handshake,
   History,
+  Badge,
+  TrackChanges,
 } from "@mui/icons-material";
 
 import { useNavigate, useLocation } from "react-router-dom";
@@ -52,6 +54,8 @@ function Sidebar() {
     { text: "Transportes", icon: <LocalShipping />, path: "/transportes" },
     { text: "Relatórios", icon: <Assessment />, path: "/relatorios" },
     { text: "Auditoria", icon: <History />, path: "/auditoria" },
+    { text: "RH", icon: <Badge />, path: "/rh" },
+    { text: "Metas", icon: <TrackChanges />, path: "/metas" },
     { text: "Configurações", icon: <Settings />, path: "/configuracoes" },
   ];
 

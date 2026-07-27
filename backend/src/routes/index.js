@@ -26,6 +26,11 @@ const AuditoriaController = require("../controllers/AuditoriaController");
 const RotaController = require("../controllers/RotaController");
 const RastreioController = require("../controllers/RastreioController");
 const AbastecimentoController = require("../controllers/AbastecimentoController");
+const CargoController = require("../controllers/CargoController");
+const FuncionarioController = require("../controllers/FuncionarioController");
+const FolhaPagamentoController = require("../controllers/FolhaPagamentoController");
+const NotificacaoController = require("../controllers/NotificacaoController");
+const MetaVendaController = require("../controllers/MetaVendaController");
 
 const AuthMiddleware = require("../middlewares/AuthMiddleware");
 const PermissionMiddleware = require("../middlewares/PermissionMiddleware");
@@ -130,6 +135,12 @@ router.put(
   AuthMiddleware.handle,
   PermissionMiddleware.handle("papeis.gerenciar"),
   PapelController.definirPermissoes,
+);
+router.delete(
+  "/papeis/:id",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("papeis.gerenciar"),
+  PapelController.destroy,
 );
 
 router.get("/permissoes", AuthMiddleware.handle, PermissaoController.index);
@@ -478,6 +489,117 @@ router.post(
   AuthMiddleware.handle,
   PermissionMiddleware.handle("notas-fiscais.gerenciar"),
   NotaFiscalController.cancelar,
+);
+
+router.get("/cargos", AuthMiddleware.handle, CargoController.index);
+router.post(
+  "/cargos",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("rh.gerenciar"),
+  CargoController.store,
+);
+router.put(
+  "/cargos/:id",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("rh.gerenciar"),
+  CargoController.update,
+);
+router.delete(
+  "/cargos/:id",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("rh.gerenciar"),
+  CargoController.destroy,
+);
+
+router.get(
+  "/funcionarios",
+  AuthMiddleware.handle,
+  FuncionarioController.index,
+);
+router.post(
+  "/funcionarios",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("rh.gerenciar"),
+  FuncionarioController.store,
+);
+router.put(
+  "/funcionarios/:id",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("rh.gerenciar"),
+  FuncionarioController.update,
+);
+router.delete(
+  "/funcionarios/:id",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("rh.gerenciar"),
+  FuncionarioController.destroy,
+);
+
+router.get(
+  "/folhas-pagamento",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("rh.gerenciar"),
+  FolhaPagamentoController.index,
+);
+router.get(
+  "/folhas-pagamento/:id",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("rh.gerenciar"),
+  FolhaPagamentoController.show,
+);
+router.post(
+  "/folhas-pagamento",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("rh.gerenciar"),
+  FolhaPagamentoController.store,
+);
+router.put(
+  "/folhas-pagamento/itens/:itemId",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("rh.gerenciar"),
+  FolhaPagamentoController.atualizarItem,
+);
+router.post(
+  "/folhas-pagamento/:id/fechar",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("rh.gerenciar"),
+  FolhaPagamentoController.fechar,
+);
+
+router.get(
+  "/notificacoes",
+  AuthMiddleware.handle,
+  NotificacaoController.index,
+);
+router.post(
+  "/notificacoes/marcar-lida",
+  AuthMiddleware.handle,
+  NotificacaoController.marcarComoLida,
+);
+
+router.get(
+  "/metas-vendas",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("metas.gerenciar"),
+  MetaVendaController.index,
+);
+router.post(
+  "/metas-vendas",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("metas.gerenciar"),
+  MetaVendaController.store,
+);
+router.put(
+  "/metas-vendas/:id",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("metas.gerenciar"),
+  MetaVendaController.update,
+);
+router.delete(
+  "/metas-vendas/:id",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("metas.gerenciar"),
+  MetaVendaController.destroy,
 );
 
 module.exports = router;

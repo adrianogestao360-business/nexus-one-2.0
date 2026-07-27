@@ -27,9 +27,10 @@ function Usuarios() {
     },
     {
       field: "papel",
-      headerName: "Papel",
+      headerName: "Papéis",
       flex: 1,
-      valueGetter: (_value, row) => row.papeis?.[0]?.nome || "-",
+      valueGetter: (_value, row) =>
+        row.papeis?.map((papel) => papel.nome).join(", ") || "-",
     },
     {
       field: "ativo",

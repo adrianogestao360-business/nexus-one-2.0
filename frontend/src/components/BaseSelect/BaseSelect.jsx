@@ -11,6 +11,7 @@ function BaseSelect({
   options = [],
   required = false,
   disabled = false,
+  multiple = false,
 }) {
   return (
     <TextField
@@ -23,6 +24,20 @@ function BaseSelect({
       onChange={onChange}
       required={required}
       disabled={disabled}
+      slotProps={
+        multiple
+          ? {
+              select: {
+                multiple: true,
+                renderValue: (selected) =>
+                  options
+                    .filter((option) => selected.includes(option.value))
+                    .map((option) => option.label)
+                    .join(", "),
+              },
+            }
+          : undefined
+      }
     >
       {options.map((option) => (
         <MenuItem

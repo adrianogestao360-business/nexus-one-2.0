@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const bcrypt = require("bcrypt");
 const prisma = require("../src/config/prisma");
+const { CODIGOS_PERMISSOES_PADRAO } = require("../src/constants/permissoes");
 
 async function createAdmin() {
   const empresa = await prisma.empresa.findFirst({
@@ -31,25 +32,7 @@ async function createAdmin() {
     },
   });
 
-  const codigosPermissoes = [
-    "empresas.gerenciar",
-    "usuarios.gerenciar",
-    "produtos.gerenciar",
-    "clientes.gerenciar",
-    "fornecedores.gerenciar",
-    "vendas.gerenciar",
-    "compras.gerenciar",
-    "financeiro.gerenciar",
-    "estoque.gerenciar",
-    "wms.gerenciar",
-    "frota.gerenciar",
-    "papeis.gerenciar",
-    "notas-fiscais.gerenciar",
-    "crm.gerenciar",
-    "auditoria.visualizar",
-  ];
-
-  for (const codigo of codigosPermissoes) {
+  for (const codigo of CODIGOS_PERMISSOES_PADRAO) {
     const permissao = await prisma.permissao.upsert({
       where: {
         codigo,

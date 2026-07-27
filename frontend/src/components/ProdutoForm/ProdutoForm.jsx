@@ -14,6 +14,7 @@ const initialState = {
   unidade: "",
   preco: "",
   estoque: "",
+  estoqueMinimo: "",
   zonaId: "",
   endereco: "",
 };
@@ -86,7 +87,7 @@ function ProdutoForm({
           />
         </Grid>
 
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <BaseFormField
             label="Categoria"
             name="categoria"
@@ -104,7 +105,7 @@ function ProdutoForm({
           />
         </Grid>
 
-        <Grid size={{ xs: 12, md: 3 }}>
+        <Grid size={{ xs: 12, md: 2 }}>
           <BaseFormField
             label="Preço"
             name="preco"
@@ -113,11 +114,20 @@ function ProdutoForm({
           />
         </Grid>
 
-        <Grid size={{ xs: 12, md: 3 }}>
+        <Grid size={{ xs: 12, md: 2 }}>
           <BaseFormField
             label="Estoque"
             name="estoque"
             value={form.estoque}
+            onChange={handleChange}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 3 }}>
+          <BaseFormField
+            label="Estoque mínimo"
+            name="estoqueMinimo"
+            value={form.estoqueMinimo}
             onChange={handleChange}
           />
         </Grid>

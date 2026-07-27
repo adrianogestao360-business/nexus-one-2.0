@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 
 const UsuarioRepository = require("../repositories/UsuarioRepository");
+const PapelRepository = require("../repositories/PapelRepository");
 const UsuarioDTO = require("../dto/UsuarioDTO");
 
 class UsuarioService {
@@ -21,11 +22,14 @@ class UsuarioService {
   }
 
   async criar(data, empresaId) {
-    const { nome, email, senha, papelId } = data;
+    const { nome, email, senha, papelIds } = data;
 
     if (!nome || !email || !senha) {
       throw this.#dadosObrigatorios();
     }
+
+    this.#validarPapelIds(papelIds);
+    await this.#validarPapeisDaEmpresa(papelIds, empresaId);
 
     const senhaHash = await bcrypt.hash(senha, 12);
 
@@ -34,7 +38,7 @@ class UsuarioService {
       email,
       senha: senhaHash,
       empresaId,
-      papelId,
+      papelIds,
     });
 
     return this.buscarPorId(usuario.id, empresaId);
@@ -43,7 +47,7 @@ class UsuarioService {
   async atualizar(id, data, empresaId) {
     await this.buscarPorId(id, empresaId);
 
-    const { nome, email, senha, ativo, papelId } = data;
+    const { nome, email, senha, ativo, papelIds } = data;
 
     if (!nome || !email) {
       const error = new Error("Nome e e-mail são obrigatórios.");
@@ -51,7 +55,10 @@ class UsuarioService {
       throw error;
     }
 
-    const dados = { nome, email, ativo, papelId };
+    this.#validarPapelIds(papelIds);
+    await this.#validarPapeisDaEmpresa(papelIds, empresaId);
+
+    const dados = { nome, email, ativo, papelIds };
 
     if (senha) {
       dados.senha = await bcrypt.hash(senha, 12);
@@ -100,6 +107,33 @@ class UsuarioService {
     const senhaHash = await bcrypt.hash(novaSenha, 12);
 
     await UsuarioRepository.atualizar(usuarioId, { senha: senhaHash });
+  }
+
+  #validarPapelIds(papelIds) {
+    if (papelIds !== undefined && !Array.isArray(papelIds)) {
+      const error = new Error("papelIds precisa ser uma lista.");
+      error.status = 400;
+      throw error;
+    }
+  }
+
+  async #validarPapeisDaEmpresa(papelIds, empresaId) {
+    if (!papelIds?.length) {
+      return;
+    }
+
+    for (const papelId of papelIds) {
+      const papel = await PapelRepository.findById(
+        Number(papelId),
+        empresaId,
+      );
+
+      if (!papel) {
+        const error = new Error("Papel não encontrado.");
+        error.status = 404;
+        throw error;
+      }
+    }
   }
 
   #dadosObrigatorios() {

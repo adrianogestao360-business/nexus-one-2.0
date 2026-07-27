@@ -33,6 +33,23 @@ class PapelController {
     return res.json(papel);
   }
 
+  async destroy(req, res) {
+    const id = Number(req.params.id);
+
+    await PapelService.excluir(id, req.usuario.empresaId);
+
+    await AuditoriaService.registrar({
+      empresaId: req.usuario.empresaId,
+      usuarioId: req.usuario.sub,
+      acao: "papel.excluir",
+      entidade: "Papel",
+      entidadeId: id,
+      ip: req.ip,
+    });
+
+    return res.status(204).send();
+  }
+
   async definirPermissoes(req, res) {
     const id = Number(req.params.id);
 

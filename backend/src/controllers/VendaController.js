@@ -22,7 +22,11 @@ class VendaController {
   }
 
   async store(req, res) {
-    const venda = await VendaService.criar(req.body, req.usuario.empresaId);
+    const venda = await VendaService.criar(
+      req.body,
+      req.usuario.empresaId,
+      req.usuario.sub,
+    );
 
     await AuditoriaService.registrar({
       empresaId: req.usuario.empresaId,
