@@ -160,6 +160,7 @@ function WMS() {
   const [localizacoes, setLocalizacoes] = useState([]);
   const [detalhe, setDetalhe] = useState(null);
   const [separacaoParaExpedir, setSeparacaoParaExpedir] = useState(null);
+  const [romaneioParaVisualizar, setRomaneioParaVisualizar] = useState(null);
   const [openZonaForm, setOpenZonaForm] = useState(false);
   const [nomeZona, setNomeZona] = useState("");
   const [openLocalizacaoForm, setOpenLocalizacaoForm] = useState(false);
@@ -291,15 +292,22 @@ function WMS() {
     }
   }
 
-  async function expedir({ veiculoId, motoristaId }) {
+  async function expedir({ veiculoId, motoristaId, volumes }) {
     try {
-      await separacaoService.expedir(
+      const separacao = await separacaoService.expedir(
         separacaoParaExpedir.id,
         veiculoId,
         motoristaId,
+        volumes,
       );
       setSeparacaoParaExpedir(null);
       await carregarSeparacoes();
+
+      setRomaneioParaVisualizar({
+        ...separacao.romaneio,
+        itens: separacao.itens,
+        venda: separacao.venda,
+      });
 
       setTipoMensagem("success");
       setMensagem("Separação expedida com sucesso.");
@@ -438,6 +446,50 @@ function WMS() {
         onClose={() => setSeparacaoParaExpedir(null)}
         onSave={expedir}
       />
+
+      <BaseDialog
+        open={Boolean(romaneioParaVisualizar)}
+        onClose={() => setRomaneioParaVisualizar(null)}
+        title={`Romaneio de Expedição #${romaneioParaVisualizar?.id || ""}`}
+        hideSave
+      >
+        {romaneioParaVisualizar && (
+          <Stack spacing={1}>
+            <Typography>
+              <strong>Cliente:</strong>{" "}
+              {romaneioParaVisualizar.venda?.cliente?.nome}
+            </Typography>
+            <Typography>
+              <strong>Veículo:</strong> {romaneioParaVisualizar.veiculo?.placa}{" "}
+              — {romaneioParaVisualizar.veiculo?.modelo}
+            </Typography>
+            <Typography>
+              <strong>Motorista:</strong>{" "}
+              {romaneioParaVisualizar.motorista?.nome}
+            </Typography>
+            <Typography>
+              <strong>Volumes:</strong> {romaneioParaVisualizar.volumes}
+            </Typography>
+            <Typography>
+              <strong>Peso total:</strong>{" "}
+              {Number(romaneioParaVisualizar.pesoTotal).toFixed(3)} kg
+            </Typography>
+
+            <Typography variant="subtitle2" sx={{ mt: 1 }}>
+              Itens
+            </Typography>
+
+            {romaneioParaVisualizar.itens?.map((item) => (
+              <Typography key={item.id} variant="body2">
+                {item.produto?.descricao} — Qtd: {item.quantidade}
+                {item.produto?.peso
+                  ? ` (${(Number(item.produto.peso) * item.quantidade).toFixed(3)} kg)`
+                  : ""}
+              </Typography>
+            ))}
+          </Stack>
+        )}
+      </BaseDialog>
 
       <BaseDialog
         open={openZonaForm}

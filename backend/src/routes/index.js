@@ -39,6 +39,8 @@ const ContaBancariaController = require("../controllers/ContaBancariaController"
 const FluxoCaixaController = require("../controllers/FluxoCaixaController");
 const LoteController = require("../controllers/LoteController");
 const InventarioController = require("../controllers/InventarioController");
+const ConferenciaController = require("../controllers/ConferenciaController");
+const RomaneioController = require("../controllers/RomaneioController");
 
 const AuthMiddleware = require("../middlewares/AuthMiddleware");
 const PermissionMiddleware = require("../middlewares/PermissionMiddleware");
@@ -333,6 +335,30 @@ router.post(
   AuthMiddleware.handle,
   PermissionMiddleware.handle("estoque.gerenciar"),
   MovimentoEstoqueController.transferir,
+);
+router.post(
+  "/movimentos-estoque/bloquear",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("estoque.gerenciar"),
+  MovimentoEstoqueController.bloquear,
+);
+router.post(
+  "/movimentos-estoque/desbloquear",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("estoque.gerenciar"),
+  MovimentoEstoqueController.desbloquear,
+);
+router.post(
+  "/movimentos-estoque/reservar",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("estoque.gerenciar"),
+  MovimentoEstoqueController.reservar,
+);
+router.post(
+  "/movimentos-estoque/liberar-reserva",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("estoque.gerenciar"),
+  MovimentoEstoqueController.liberarReserva,
 );
 
 router.get("/zonas", AuthMiddleware.handle, ZonaController.index);
@@ -717,6 +743,42 @@ router.post(
   AuthMiddleware.handle,
   PermissionMiddleware.handle("estoque.gerenciar"),
   InventarioController.fechar,
+);
+
+router.get(
+  "/conferencias",
+  AuthMiddleware.handle,
+  ConferenciaController.index,
+);
+router.get(
+  "/conferencias/:id",
+  AuthMiddleware.handle,
+  ConferenciaController.show,
+);
+router.post(
+  "/compras/:compraId/conferencia",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("compras.gerenciar"),
+  ConferenciaController.abrir,
+);
+router.put(
+  "/conferencias/:id/itens/:itemId",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("compras.gerenciar"),
+  ConferenciaController.atualizarItem,
+);
+router.post(
+  "/conferencias/:id/concluir",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("compras.gerenciar"),
+  ConferenciaController.concluir,
+);
+
+router.get("/romaneios", AuthMiddleware.handle, RomaneioController.index);
+router.get(
+  "/romaneios/:id",
+  AuthMiddleware.handle,
+  RomaneioController.show,
 );
 
 module.exports = router;

@@ -12,6 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 
+import BaseFormField from "../../../components/BaseFormField/BaseFormField";
 import BasePage from "../../../components/BasePage/BasePage";
 import BaseCrudTable from "../../../components/BaseCrudTable/BaseCrudTable";
 import BaseDialog from "../../../components/BaseDialog/BaseDialog";
@@ -19,12 +20,15 @@ import CompraForm from "../../../components/CompraForm/CompraForm";
 import DevolucaoForm from "../../../components/DevolucaoForm/DevolucaoForm";
 
 import compraService from "../services/compraService";
+import conferenciaService from "../services/conferenciaService";
 
 function Compras() {
   const [rows, setRows] = useState([]);
   const [openForm, setOpenForm] = useState(false);
   const [compraDetalhe, setCompraDetalhe] = useState(null);
   const [compraParaDevolver, setCompraParaDevolver] = useState(null);
+  const [conferenciaDetalhe, setConferenciaDetalhe] = useState(null);
+  const [recebimentos, setRecebimentos] = useState({});
   const [mensagem, setMensagem] = useState("");
   const [tipoMensagem, setTipoMensagem] = useState("success");
 
@@ -124,6 +128,68 @@ function Compras() {
     }
   }
 
+  async function abrirConferencia(compra) {
+    try {
+      const conferencia = await conferenciaService.abrir(compra.id, {});
+      setConferenciaDetalhe(conferencia);
+      setRecebimentos({});
+      setCompraDetalhe(null);
+    } catch (error) {
+      console.error("Erro ao abrir conferência:", error);
+
+      setTipoMensagem("error");
+      setMensagem(
+        error.response?.data?.message || "Erro ao abrir conferência.",
+      );
+    }
+  }
+
+  async function salvarRecebimento(itemId) {
+    try {
+      await conferenciaService.registrarRecebimento(
+        conferenciaDetalhe.id,
+        itemId,
+        recebimentos[itemId],
+      );
+
+      const atualizada = await conferenciaService.buscarPorId(
+        conferenciaDetalhe.id,
+      );
+      setConferenciaDetalhe(atualizada);
+
+      setTipoMensagem("success");
+      setMensagem("Recebimento registrado.");
+    } catch (error) {
+      console.error("Erro ao registrar recebimento:", error);
+
+      setTipoMensagem("error");
+      setMensagem(
+        error.response?.data?.message || "Erro ao registrar recebimento.",
+      );
+    }
+  }
+
+  async function concluirConferencia() {
+    try {
+      const atualizada = await conferenciaService.concluir(
+        conferenciaDetalhe.id,
+      );
+      setConferenciaDetalhe(atualizada);
+
+      setTipoMensagem("success");
+      setMensagem(
+        "Conferência concluída. Divergências foram ajustadas no estoque.",
+      );
+    } catch (error) {
+      console.error("Erro ao concluir conferência:", error);
+
+      setTipoMensagem("error");
+      setMensagem(
+        error.response?.data?.message || "Erro ao concluir conferência.",
+      );
+    }
+  }
+
   useEffect(() => {
     carregarCompras();
   }, []);
@@ -198,14 +264,22 @@ function Compras() {
             </Typography>
 
             {compraDetalhe.status === "confirmada" && (
-              <Button
-                variant="outlined"
-                color="warning"
-                onClick={() => setCompraParaDevolver(compraDetalhe)}
-                sx={{ alignSelf: "flex-start" }}
-              >
-                Registrar Devolução
-              </Button>
+              <Stack direction="row" spacing={2}>
+                <Button
+                  variant="outlined"
+                  onClick={() => abrirConferencia(compraDetalhe)}
+                >
+                  Conferir Recebimento
+                </Button>
+
+                <Button
+                  variant="outlined"
+                  color="warning"
+                  onClick={() => setCompraParaDevolver(compraDetalhe)}
+                >
+                  Registrar Devolução
+                </Button>
+              </Stack>
             )}
           </Stack>
         )}
@@ -218,6 +292,87 @@ function Compras() {
         onClose={() => setCompraParaDevolver(null)}
         onSave={devolverCompra}
       />
+
+      <BaseDialog
+        open={Boolean(conferenciaDetalhe)}
+        onClose={() => setConferenciaDetalhe(null)}
+        title={`Conferência de Recebimento — Compra #${conferenciaDetalhe?.compraId || ""} (${
+          conferenciaDetalhe?.status === "concluida" ? "Concluída" : "Aberta"
+        })`}
+        hideSave
+      >
+        {conferenciaDetalhe && (
+          <Stack spacing={2}>
+            {conferenciaDetalhe.itens.map((item) => {
+              const diferenca =
+                item.quantidadeRecebida !== null
+                  ? item.quantidadeRecebida - item.quantidadePedida
+                  : null;
+
+              return (
+                <Stack
+                  key={item.id}
+                  direction="row"
+                  spacing={2}
+                  alignItems="center"
+                  sx={{
+                    p: 1.5,
+                    borderRadius: 2,
+                    border: "1px solid rgba(148, 163, 184, 0.14)",
+                  }}
+                >
+                  <Stack sx={{ flex: 1, minWidth: 0 }}>
+                    <strong>{item.produto?.descricao}</strong>
+                    <span>
+                      Pedido: {item.quantidadePedida}
+                      {item.quantidadeRecebida !== null
+                        ? ` | Recebido: ${item.quantidadeRecebida}`
+                        : ""}
+                      {diferenca ? ` | Divergência: ${diferenca > 0 ? "+" : ""}${diferenca}` : ""}
+                    </span>
+                  </Stack>
+
+                  {conferenciaDetalhe.status === "aberta" && (
+                    <>
+                      <BaseFormField
+                        label="Quantidade recebida"
+                        name={`recebimento-${item.id}`}
+                        type="number"
+                        value={
+                          recebimentos[item.id] ?? item.quantidadeRecebida ?? ""
+                        }
+                        onChange={(event) =>
+                          setRecebimentos((old) => ({
+                            ...old,
+                            [item.id]: event.target.value,
+                          }))
+                        }
+                        sx={{ width: 180, flexShrink: 0 }}
+                      />
+
+                      <Button
+                        variant="outlined"
+                        onClick={() => salvarRecebimento(item.id)}
+                        sx={{ flexShrink: 0 }}
+                      >
+                        Salvar
+                      </Button>
+                    </>
+                  )}
+                </Stack>
+              );
+            })}
+
+            {conferenciaDetalhe.status === "aberta" && (
+              <Stack direction="row" justifyContent="flex-end">
+                <Button variant="contained" onClick={concluirConferencia}>
+                  Concluir Conferência
+                </Button>
+              </Stack>
+            )}
+          </Stack>
+        )}
+      </BaseDialog>
 
       <Snackbar
         open={Boolean(mensagem)}

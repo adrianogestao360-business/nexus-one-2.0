@@ -17,6 +17,29 @@ const movimentoEstoqueService = {
     const response = await api.post("/movimentos-estoque/transferir", dados);
     return response.data;
   },
+
+  bloquear: async (dados) => {
+    const response = await api.post("/movimentos-estoque/bloquear", dados);
+    return response.data;
+  },
+
+  desbloquear: async (dados) => {
+    const response = await api.post("/movimentos-estoque/desbloquear", dados);
+    return response.data;
+  },
+
+  reservar: async (dados) => {
+    const response = await api.post("/movimentos-estoque/reservar", dados);
+    return response.data;
+  },
+
+  liberarReserva: async (dados) => {
+    const response = await api.post(
+      "/movimentos-estoque/liberar-reserva",
+      dados,
+    );
+    return response.data;
+  },
 };
 
 export default movimentoEstoqueService;

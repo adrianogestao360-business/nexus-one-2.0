@@ -7,6 +7,8 @@ const LoteRepository = require("../repositories/LoteRepository");
 const EstoqueLocalizacaoHelper = require("./EstoqueLocalizacaoHelper");
 const LoteService = require("./LoteService");
 
+const ORIGENS_SAIDA_VALIDAS = ["avaria", "perda"];
+
 class MovimentoEstoqueService {
   async listar(empresaId, produtoId) {
     return MovimentoEstoqueRepository.listar(
@@ -24,6 +26,7 @@ class MovimentoEstoqueService {
       localizacaoId,
       loteNumero,
       loteValidade,
+      origem,
     } = data;
 
     if (tipo !== "entrada" && tipo !== "saida") {
@@ -104,7 +107,10 @@ class MovimentoEstoqueService {
           tipo,
           quantidade: quantidadeNum,
           motivo,
-          origem: "manual",
+          origem:
+            tipo === "saida" && ORIGENS_SAIDA_VALIDAS.includes(origem)
+              ? origem
+              : "manual",
           saldoApos: produtoAtualizado.estoque,
           localizacaoId: localizacaoAlvo,
           loteId,
@@ -113,6 +119,142 @@ class MovimentoEstoqueService {
     });
 
     return movimento;
+  }
+
+  async bloquear(data, empresaId) {
+    return this.#ajustarReserva(data, empresaId, {
+      campo: "quantidadeBloqueada",
+      direcao: "incrementar",
+      tipoMovimento: "bloqueio",
+      erroSaldo: "Estoque disponível insuficiente para bloquear.",
+    });
+  }
+
+  async desbloquear(data, empresaId) {
+    return this.#ajustarReserva(data, empresaId, {
+      campo: "quantidadeBloqueada",
+      direcao: "decrementar",
+      tipoMovimento: "desbloqueio",
+      erroSaldo: "Quantidade bloqueada insuficiente para desbloquear.",
+    });
+  }
+
+  async reservar(data, empresaId) {
+    return this.#ajustarReserva(data, empresaId, {
+      campo: "quantidadeReservada",
+      direcao: "incrementar",
+      tipoMovimento: "reserva",
+      erroSaldo: "Estoque disponível insuficiente para reservar.",
+    });
+  }
+
+  async liberarReserva(data, empresaId) {
+    return this.#ajustarReserva(data, empresaId, {
+      campo: "quantidadeReservada",
+      direcao: "decrementar",
+      tipoMovimento: "liberacao_reserva",
+      erroSaldo: "Quantidade reservada insuficiente para liberar.",
+    });
+  }
+
+  async #ajustarReserva(
+    data,
+    empresaId,
+    { campo, direcao, tipoMovimento, erroSaldo },
+  ) {
+    const { produtoId, localizacaoId, quantidade, motivo } = data;
+
+    const quantidadeNum = Number(quantidade);
+
+    if (!produtoId || !localizacaoId || !quantidadeNum || quantidadeNum <= 0 || !motivo) {
+      const error = new Error(
+        "Produto, localização, quantidade maior que zero e motivo são obrigatórios.",
+      );
+      error.status = 400;
+      throw error;
+    }
+
+    const produto = await ProdutoRepository.findById(
+      Number(produtoId),
+      empresaId,
+    );
+
+    if (!produto) {
+      const error = new Error("Produto não encontrado.");
+      error.status = 404;
+      throw error;
+    }
+
+    const localizacao = await LocalizacaoRepository.findById(
+      Number(localizacaoId),
+      empresaId,
+    );
+
+    if (!localizacao) {
+      const error = new Error("Localização não encontrada.");
+      error.status = 404;
+      throw error;
+    }
+
+    return prisma.$transaction(async (tx) => {
+      const estoqueLocal = await tx.estoqueLocalizacao.findUnique({
+        where: {
+          produtoId_localizacaoId: {
+            produtoId: produto.id,
+            localizacaoId: localizacao.id,
+          },
+        },
+      });
+
+      if (direcao === "incrementar") {
+        const disponivel =
+          (estoqueLocal?.quantidade || 0) -
+          (estoqueLocal?.quantidadeBloqueada || 0) -
+          (estoqueLocal?.quantidadeReservada || 0);
+
+        if (disponivel < quantidadeNum) {
+          const error = new Error(erroSaldo);
+          error.status = 400;
+          throw error;
+        }
+      } else {
+        const atual = estoqueLocal?.[campo] || 0;
+
+        if (atual < quantidadeNum) {
+          const error = new Error(erroSaldo);
+          error.status = 400;
+          throw error;
+        }
+      }
+
+      await tx.estoqueLocalizacao.update({
+        where: {
+          produtoId_localizacaoId: {
+            produtoId: produto.id,
+            localizacaoId: localizacao.id,
+          },
+        },
+        data: {
+          [campo]:
+            direcao === "incrementar"
+              ? { increment: quantidadeNum }
+              : { decrement: quantidadeNum },
+        },
+      });
+
+      return tx.movimentoEstoque.create({
+        data: {
+          produtoId: produto.id,
+          empresaId,
+          tipo: tipoMovimento,
+          quantidade: quantidadeNum,
+          motivo,
+          origem: "manual",
+          saldoApos: produto.estoque,
+          localizacaoId: localizacao.id,
+        },
+      });
+    });
   }
 
   async transferir(data, empresaId) {

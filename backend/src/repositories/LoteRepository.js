@@ -17,6 +17,21 @@ class LoteRepository {
     });
   }
 
+  async listarDisponiveisFEFO(produtoId, empresaId, tx = prisma) {
+    return tx.lote.findMany({
+      where: {
+        produtoId,
+        empresaId,
+        ativo: true,
+        quantidade: { gt: 0 },
+      },
+      orderBy: [
+        { dataValidade: { sort: "asc", nulls: "last" } },
+        { createdAt: "asc" },
+      ],
+    });
+  }
+
   async findByNumero(produtoId, numero, empresaId, tx = prisma) {
     return tx.lote.findFirst({
       where: {

@@ -65,6 +65,12 @@ class SeparacaoRepository {
           },
         },
       },
+      romaneio: {
+        include: {
+          veiculo: true,
+          motorista: true,
+        },
+      },
     };
   }
 }

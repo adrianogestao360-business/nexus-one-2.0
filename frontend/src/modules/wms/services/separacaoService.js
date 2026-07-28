@@ -33,10 +33,11 @@ const separacaoService = {
     return response.data;
   },
 
-  expedir: async (id, veiculoId, motoristaId) => {
+  expedir: async (id, veiculoId, motoristaId, volumes) => {
     const response = await api.post(`/separacoes/${id}/expedir`, {
       veiculoId,
       motoristaId,
+      volumes,
     });
     return response.data;
   },

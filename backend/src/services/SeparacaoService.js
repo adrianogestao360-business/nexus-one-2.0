@@ -5,6 +5,7 @@ const prisma = require("../config/prisma");
 const SeparacaoRepository = require("../repositories/SeparacaoRepository");
 const VeiculoRepository = require("../repositories/VeiculoRepository");
 const MotoristaRepository = require("../repositories/MotoristaRepository");
+const RomaneioRepository = require("../repositories/RomaneioRepository");
 
 class SeparacaoService {
   async listar(empresaId, status) {
@@ -94,7 +95,7 @@ class SeparacaoService {
     });
   }
 
-  async expedir(id, empresaId, veiculoId, motoristaId) {
+  async expedir(id, empresaId, veiculoId, motoristaId, volumes) {
     const separacao = await this.buscarPorId(id, empresaId);
 
     if (separacao.status !== "separado") {
@@ -133,6 +134,13 @@ class SeparacaoService {
       throw error;
     }
 
+    const volumesNum = Number(volumes) || 1;
+
+    const pesoTotal = separacao.itens.reduce(
+      (soma, item) => soma + Number(item.produto?.peso || 0) * item.quantidade,
+      0,
+    );
+
     const separacaoAtualizada = await prisma.$transaction(async (tx) => {
       const atualizada = await tx.separacao.update({
         where: {
@@ -162,6 +170,18 @@ class SeparacaoService {
           rotaId: rota.id,
         },
       });
+
+      await RomaneioRepository.criar(
+        {
+          separacaoId: id,
+          empresaId,
+          veiculoId: veiculo.id,
+          motoristaId: motorista.id,
+          volumes: volumesNum,
+          pesoTotal,
+        },
+        tx,
+      );
 
       return atualizada;
     });

@@ -18,10 +18,21 @@ import BaseFormField from "../../../components/BaseFormField/BaseFormField";
 import MovimentoEstoqueForm from "../../../components/MovimentoEstoqueForm/MovimentoEstoqueForm";
 import TransferenciaEstoqueForm from "../../../components/TransferenciaEstoqueForm/TransferenciaEstoqueForm";
 import InventarioForm from "../../../components/InventarioForm/InventarioForm";
+import BloqueioReservaForm from "../../../components/BloqueioReservaForm/BloqueioReservaForm";
 
 import movimentoEstoqueService from "../services/movimentoEstoqueService";
 import loteService from "../services/loteService";
 import inventarioService from "../services/inventarioService";
+import estoqueLocalizacaoService from "../services/estoqueLocalizacaoService";
+
+const tipoMovimentoInfo = {
+  entrada: { label: "Entrada", color: "success" },
+  saida: { label: "Saída", color: "error" },
+  bloqueio: { label: "Bloqueio", color: "warning" },
+  desbloqueio: { label: "Desbloqueio", color: "info" },
+  reserva: { label: "Reserva", color: "warning" },
+  liberacao_reserva: { label: "Liberação de Reserva", color: "info" },
+};
 
 const origemLabel = {
   manual: "Manual",
@@ -30,7 +41,64 @@ const origemLabel = {
   transferencia: "Transferência",
   devolucao: "Devolução",
   ajuste_inventario: "Ajuste de Inventário",
+  avaria: "Avaria",
+  perda: "Perda",
+  conferencia_recebimento: "Conferência de Recebimento",
 };
+
+const acaoServico = {
+  bloquear: "bloquear",
+  desbloquear: "desbloquear",
+  reservar: "reservar",
+  liberarReserva: "liberarReserva",
+};
+
+const acaoMensagem = {
+  bloquear: "Estoque bloqueado com sucesso.",
+  desbloquear: "Estoque desbloqueado com sucesso.",
+  reservar: "Estoque reservado com sucesso.",
+  liberarReserva: "Reserva liberada com sucesso.",
+};
+
+const estoqueLocalizacaoColunas = [
+  {
+    field: "produto",
+    headerName: "Produto",
+    flex: 2,
+    valueGetter: (_value, row) => row.produto?.descricao || "-",
+  },
+  {
+    field: "localizacao",
+    headerName: "Localização",
+    flex: 1,
+    valueGetter: (_value, row) => row.localizacao?.codigo || "-",
+  },
+  {
+    field: "quantidade",
+    headerName: "Total",
+    type: "number",
+    flex: 1,
+  },
+  {
+    field: "quantidadeBloqueada",
+    headerName: "Bloqueado",
+    type: "number",
+    flex: 1,
+  },
+  {
+    field: "quantidadeReservada",
+    headerName: "Reservado",
+    type: "number",
+    flex: 1,
+  },
+  {
+    field: "disponivel",
+    headerName: "Disponível",
+    flex: 1,
+    valueGetter: (_value, row) =>
+      row.quantidade - row.quantidadeBloqueada - row.quantidadeReservada,
+  },
+];
 
 const columns = [
   {
@@ -49,14 +117,21 @@ const columns = [
     field: "tipo",
     headerName: "Tipo",
     flex: 1,
-    renderCell: (params) => (
-      <Chip
-        label={params.value === "entrada" ? "Entrada" : "Saída"}
-        color={params.value === "entrada" ? "success" : "error"}
-        size="small"
-        variant="outlined"
-      />
-    ),
+    renderCell: (params) => {
+      const info = tipoMovimentoInfo[params.value] || {
+        label: params.value,
+        color: "default",
+      };
+
+      return (
+        <Chip
+          label={info.label}
+          color={info.color}
+          size="small"
+          variant="outlined"
+        />
+      );
+    },
   },
   {
     field: "quantidade",
@@ -75,6 +150,12 @@ const columns = [
     headerName: "Localização",
     flex: 1,
     valueGetter: (_value, row) => row.localizacao?.codigo || "-",
+  },
+  {
+    field: "lote",
+    headerName: "Lote",
+    flex: 1,
+    valueGetter: (_value, row) => row.lote?.numero || "-",
   },
   {
     field: "motivo",
@@ -229,6 +310,8 @@ function Estoque() {
   const [openInventarioForm, setOpenInventarioForm] = useState(false);
   const [inventarioDetalhe, setInventarioDetalhe] = useState(null);
   const [contagens, setContagens] = useState({});
+  const [estoquesLocalizacao, setEstoquesLocalizacao] = useState([]);
+  const [openBloqueioReservaForm, setOpenBloqueioReservaForm] = useState(false);
   const [mensagem, setMensagem] = useState("");
   const [tipoMensagem, setTipoMensagem] = useState("success");
 
@@ -270,6 +353,37 @@ function Estoque() {
       setTipoMensagem("error");
       setMensagem(
         error.response?.data?.message || "Erro ao lançar movimento.",
+      );
+
+      throw error;
+    }
+  }
+
+  async function carregarEstoquesLocalizacao() {
+    try {
+      const dados = await estoqueLocalizacaoService.listar();
+      setEstoquesLocalizacao(dados);
+    } catch (error) {
+      console.error("Erro ao carregar estoque por localização:", error);
+
+      setTipoMensagem("error");
+      setMensagem("Erro ao carregar estoque por localização.");
+    }
+  }
+
+  async function salvarBloqueioReserva(acao, dados) {
+    try {
+      await movimentoEstoqueService[acaoServico[acao]](dados);
+      await carregarEstoquesLocalizacao();
+
+      setTipoMensagem("success");
+      setMensagem(acaoMensagem[acao]);
+    } catch (error) {
+      console.error("Erro ao registrar bloqueio/reserva:", error);
+
+      setTipoMensagem("error");
+      setMensagem(
+        error.response?.data?.message || "Erro ao registrar operação.",
       );
 
       throw error;
@@ -388,25 +502,31 @@ function Estoque() {
       carregarLotes();
     } else if (aba === "inventario") {
       carregarInventarios();
+    } else if (aba === "bloqueioReserva") {
+      carregarEstoquesLocalizacao();
     } else {
       carregarMovimentos();
     }
   }, [aba]);
 
+  const botaoAba = {
+    movimentos: { label: "Novo Movimento", onClick: () => setOpenForm(true) },
+    inventario: {
+      label: "Novo Inventário",
+      onClick: () => setOpenInventarioForm(true),
+    },
+    bloqueioReserva: {
+      label: "Bloquear / Reservar",
+      onClick: () => setOpenBloqueioReservaForm(true),
+    },
+  };
+
   return (
     <BasePage
       title="Estoque"
       subtitle="Kardex de Movimentações"
-      buttonLabel={
-        aba === "movimentos"
-          ? "Novo Movimento"
-          : aba === "inventario"
-            ? "Novo Inventário"
-            : undefined
-      }
-      onButtonClick={() =>
-        aba === "inventario" ? setOpenInventarioForm(true) : setOpenForm(true)
-      }
+      buttonLabel={botaoAba[aba]?.label}
+      onButtonClick={botaoAba[aba]?.onClick}
     >
       <Tabs
         value={aba}
@@ -416,6 +536,7 @@ function Estoque() {
         <Tab value="movimentos" label="Movimentações" />
         <Tab value="lotes" label="Lotes e Validades" />
         <Tab value="inventario" label="Inventário" />
+        <Tab value="bloqueioReserva" label="Bloqueio e Reserva" />
       </Tabs>
 
       {aba === "movimentos" && (
@@ -537,6 +658,41 @@ function Estoque() {
         </Paper>
       )}
 
+      {aba === "bloqueioReserva" && (
+        <Paper
+          elevation={0}
+          sx={{
+            height: 620,
+            borderRadius: 3,
+            border: "1px solid rgba(148, 163, 184, 0.14)",
+            overflow: "hidden",
+          }}
+        >
+          <DataGrid
+            rows={estoquesLocalizacao}
+            columns={estoqueLocalizacaoColunas}
+            disableRowSelectionOnClick
+            pageSizeOptions={[10, 20, 50]}
+            initialState={{
+              pagination: {
+                paginationModel: {
+                  pageSize: 10,
+                },
+              },
+            }}
+            sx={{
+              border: 0,
+              "& .MuiDataGrid-columnHeaders": {
+                backgroundColor: "#1B2438",
+              },
+              "& .MuiDataGrid-row:hover": {
+                backgroundColor: "#1B2438",
+              },
+            }}
+          />
+        </Paper>
+      )}
+
       <MovimentoEstoqueForm
         open={openForm}
         onClose={() => setOpenForm(false)}
@@ -553,6 +709,12 @@ function Estoque() {
         open={openInventarioForm}
         onClose={() => setOpenInventarioForm(false)}
         onSave={abrirInventario}
+      />
+
+      <BloqueioReservaForm
+        open={openBloqueioReservaForm}
+        onClose={() => setOpenBloqueioReservaForm(false)}
+        onSave={salvarBloqueioReserva}
       />
 
       <BaseDialog

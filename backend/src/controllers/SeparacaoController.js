@@ -67,6 +67,7 @@ class SeparacaoController {
       req.usuario.empresaId,
       req.body.veiculoId,
       req.body.motoristaId,
+      req.body.volumes,
     );
 
     return res.json(separacao);

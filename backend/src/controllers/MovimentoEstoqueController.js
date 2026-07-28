@@ -27,6 +27,42 @@ class MovimentoEstoqueController {
 
     return res.status(201).json(resultado);
   }
+
+  async bloquear(req, res) {
+    const movimento = await MovimentoEstoqueService.bloquear(
+      req.body,
+      req.usuario.empresaId,
+    );
+
+    return res.status(201).json(movimento);
+  }
+
+  async desbloquear(req, res) {
+    const movimento = await MovimentoEstoqueService.desbloquear(
+      req.body,
+      req.usuario.empresaId,
+    );
+
+    return res.status(201).json(movimento);
+  }
+
+  async reservar(req, res) {
+    const movimento = await MovimentoEstoqueService.reservar(
+      req.body,
+      req.usuario.empresaId,
+    );
+
+    return res.status(201).json(movimento);
+  }
+
+  async liberarReserva(req, res) {
+    const movimento = await MovimentoEstoqueService.liberarReserva(
+      req.body,
+      req.usuario.empresaId,
+    );
+
+    return res.status(201).json(movimento);
+  }
 }
 
 module.exports = new MovimentoEstoqueController();

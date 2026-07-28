@@ -68,6 +68,37 @@ class LoteService {
 
     return lote;
   }
+
+  async resolverConsumoAutomatico(tx, { produtoId, quantidade, empresaId }) {
+    const lotes = await LoteRepository.listarDisponiveisFEFO(
+      produtoId,
+      empresaId,
+      tx,
+    );
+
+    let restante = quantidade;
+    const alocacoes = [];
+
+    for (const lote of lotes) {
+      if (restante <= 0) {
+        break;
+      }
+
+      const consumir = Math.min(lote.quantidade, restante);
+
+      await LoteRepository.decrementar(lote.id, consumir, tx);
+
+      alocacoes.push({ loteId: lote.id, quantidade: consumir });
+
+      restante -= consumir;
+    }
+
+    if (restante > 0) {
+      alocacoes.push({ loteId: null, quantidade: restante });
+    }
+
+    return alocacoes;
+  }
 }
 
 module.exports = new LoteService();

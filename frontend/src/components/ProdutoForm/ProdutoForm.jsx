@@ -28,6 +28,7 @@ const initialState = {
   origem: "0",
   cest: "",
   controlaLote: false,
+  peso: "",
 };
 
 function ProdutoForm({
@@ -148,6 +149,16 @@ function ProdutoForm({
             label="Estoque mínimo"
             name="estoqueMinimo"
             value={form.estoqueMinimo}
+            onChange={handleChange}
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 2 }}>
+          <BaseFormField
+            label="Peso (kg)"
+            name="peso"
+            type="number"
+            value={form.peso}
             onChange={handleChange}
           />
         </Grid>

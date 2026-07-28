@@ -62,6 +62,8 @@ model Empresa {
   contasBancarias ContaBancaria[]
   lotes         Lote[]
   inventarios   Inventario[]
+  conferencias  Conferencia[]
+  romaneios     Romaneio[]
 }
 
 model Usuario {
@@ -189,6 +191,7 @@ model Produto {
   cest   String?
 
   controlaLote Boolean @default(false)
+  peso         Decimal? @db.Decimal(10, 3)
 
   empresa Empresa @relation(fields: [empresaId], references: [id])
   zona    Zona?   @relation(fields: [zonaId], references: [id])
@@ -201,6 +204,7 @@ model Produto {
   lotes Lote[]
   inventarios Inventario[]
   inventarioItens InventarioItem[]
+  conferenciaItens ConferenciaItem[]
 
   @@unique([empresaId, codigo])
   @@index([empresaId])
@@ -326,8 +330,42 @@ model Compra {
   movimentos MovimentoEstoque[]
   notasFiscais NotaFiscal[]
   devolucoes Devolucao[]
+  conferencias Conferencia[]
 
   @@index([empresaId])
+}
+
+model Conferencia {
+  id          Int       @id @default(autoincrement())
+  compraId    Int
+  empresaId   Int
+  status      String    @default("aberta")
+  observacao  String?
+  createdAt   DateTime  @default(now())
+  concluidaEm DateTime?
+
+  compra  Compra            @relation(fields: [compraId], references: [id])
+  empresa Empresa           @relation(fields: [empresaId], references: [id])
+  itens   ConferenciaItem[]
+
+  @@index([empresaId])
+  @@index([compraId])
+}
+
+model ConferenciaItem {
+  id                 Int       @id @default(autoincrement())
+  conferenciaId      Int
+  produtoId          Int
+  localizacaoId      Int
+  quantidadePedida   Int
+  quantidadeRecebida Int?
+  conferidoEm        DateTime?
+
+  conferencia Conferencia @relation(fields: [conferenciaId], references: [id])
+  produto     Produto     @relation(fields: [produtoId], references: [id])
+  localizacao Localizacao @relation(fields: [localizacaoId], references: [id])
+
+  @@index([conferenciaId])
 }
 
 model CompraItem {
@@ -484,16 +522,19 @@ model Localizacao {
   movimentos MovimentoEstoque[]
   inventarios     Inventario[]
   inventarioItens InventarioItem[]
+  conferenciaItens ConferenciaItem[]
 
   @@unique([empresaId, codigo])
 }
 
 model EstoqueLocalizacao {
-  id            Int @id @default(autoincrement())
-  produtoId     Int
-  localizacaoId Int
-  empresaId     Int
-  quantidade    Int @default(0)
+  id                  Int @id @default(autoincrement())
+  produtoId           Int
+  localizacaoId       Int
+  empresaId           Int
+  quantidade          Int @default(0)
+  quantidadeBloqueada Int @default(0)
+  quantidadeReservada Int @default(0)
 
   produto     Produto     @relation(fields: [produtoId], references: [id])
   localizacao Localizacao @relation(fields: [localizacaoId], references: [id])
@@ -518,6 +559,25 @@ model Separacao {
   separador Usuario?        @relation(fields: [separadorId], references: [id])
   itens     SeparacaoItem[]
   entrega   Entrega?
+  romaneio  Romaneio?
+
+  @@index([empresaId])
+}
+
+model Romaneio {
+  id          Int      @id @default(autoincrement())
+  separacaoId Int      @unique
+  empresaId   Int
+  veiculoId   Int
+  motoristaId Int
+  volumes     Int      @default(1)
+  pesoTotal   Decimal  @default(0) @db.Decimal(10, 3)
+  createdAt   DateTime @default(now())
+
+  separacao Separacao @relation(fields: [separacaoId], references: [id])
+  empresa   Empresa   @relation(fields: [empresaId], references: [id])
+  veiculo   Veiculo   @relation(fields: [veiculoId], references: [id])
+  motorista Motorista @relation(fields: [motoristaId], references: [id])
 
   @@index([empresaId])
 }
@@ -551,6 +611,7 @@ model Veiculo {
   entregas       Entrega[]
   rotas          Rota[]
   abastecimentos Abastecimento[]
+  romaneios      Romaneio[]
 
   @@unique([empresaId, placa])
   @@index([empresaId])
@@ -566,9 +627,10 @@ model Motorista {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  empresa  Empresa   @relation(fields: [empresaId], references: [id])
-  entregas Entrega[]
-  rotas    Rota[]
+  empresa   Empresa    @relation(fields: [empresaId], references: [id])
+  entregas  Entrega[]
+  rotas     Rota[]
+  romaneios Romaneio[]
 
   @@index([empresaId])
 }

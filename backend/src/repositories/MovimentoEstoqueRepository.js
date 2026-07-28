@@ -10,6 +10,7 @@ class MovimentoEstoqueRepository {
       include: {
         produto: true,
         localizacao: true,
+        lote: true,
       },
       orderBy: {
         createdAt: "desc",

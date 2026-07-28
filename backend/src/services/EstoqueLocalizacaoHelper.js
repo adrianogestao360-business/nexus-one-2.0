@@ -129,7 +129,14 @@ class EstoqueLocalizacaoHelper {
         break;
       }
 
-      const consumir = Math.min(saldo.quantidade, restante);
+      const disponivel =
+        saldo.quantidade - saldo.quantidadeBloqueada - saldo.quantidadeReservada;
+
+      if (disponivel <= 0) {
+        continue;
+      }
+
+      const consumir = Math.min(disponivel, restante);
 
       await tx.estoqueLocalizacao.update({
         where: {
@@ -152,7 +159,7 @@ class EstoqueLocalizacaoHelper {
 
     if (restante > 0) {
       const error = new Error(
-        "Inconsistência de estoque por localização: saldo insuficiente para completar a operação.",
+        "Estoque disponível insuficiente (parte pode estar bloqueada ou reservada).",
       );
       error.status = 409;
       throw error;

@@ -78,6 +78,7 @@ class ProdutoService {
       origem,
       cest,
       controlaLote,
+      peso,
     } = data;
 
     if (!codigo || !descricao) {
@@ -104,6 +105,7 @@ class ProdutoService {
       origem: origem !== undefined && origem !== "" ? Number(origem) : 0,
       cest: cest || null,
       controlaLote: Boolean(controlaLote),
+      peso: peso !== undefined && peso !== "" ? Number(peso) : null,
     };
   }
 

@@ -9,17 +9,21 @@ import produtoService from "../../modules/produtos/services/produtoService";
 import localizacaoService from "../../modules/wms/services/localizacaoService";
 
 const initialState = {
+  acao: "bloquear",
   produtoId: "",
-  tipo: "entrada",
+  localizacaoId: "",
   quantidade: "",
   motivo: "",
-  localizacaoId: "",
-  loteNumero: "",
-  loteValidade: "",
-  origem: "manual",
 };
 
-function MovimentoEstoqueForm({ open, onClose, onSave }) {
+const acaoLabel = {
+  bloquear: "Bloquear",
+  desbloquear: "Desbloquear",
+  reservar: "Reservar",
+  liberarReserva: "Liberar Reserva",
+};
+
+function BloqueioReservaForm({ open, onClose, onSave }) {
   const [form, setForm] = useState(initialState);
   const [produtos, setProdutos] = useState([]);
   const [localizacoes, setLocalizacoes] = useState([]);
@@ -44,27 +48,41 @@ function MovimentoEstoqueForm({ open, onClose, onSave }) {
   }
 
   async function handleSave() {
-    await onSave(form);
+    await onSave(form.acao, {
+      produtoId: form.produtoId,
+      localizacaoId: form.localizacaoId,
+      quantidade: form.quantidade,
+      motivo: form.motivo,
+    });
 
     setForm(initialState);
 
     onClose();
   }
 
-  const produtoSelecionado = produtos.find(
-    (produto) => produto.id === form.produtoId,
-  );
-  const controlaLote = Boolean(produtoSelecionado?.controlaLote);
-
   return (
     <BaseDialog
       open={open}
       onClose={onClose}
       onSave={handleSave}
-      title="Novo Movimento de Estoque"
+      title="Bloqueio / Reserva de Estoque"
     >
       <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
+          <BaseSelect
+            label="Ação"
+            name="acao"
+            value={form.acao}
+            onChange={handleChange}
+            options={Object.entries(acaoLabel).map(([value, label]) => ({
+              value,
+              label,
+            }))}
+            required
+          />
+        </Grid>
+
+        <Grid size={{ xs: 12, md: 8 }}>
           <BaseSelect
             label="Produto"
             name="produtoId"
@@ -72,22 +90,8 @@ function MovimentoEstoqueForm({ open, onClose, onSave }) {
             onChange={handleChange}
             options={produtos.map((produto) => ({
               value: produto.id,
-              label: `${produto.descricao} (estoque: ${produto.estoque})`,
+              label: produto.descricao,
             }))}
-            required
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <BaseSelect
-            label="Tipo"
-            name="tipo"
-            value={form.tipo}
-            onChange={handleChange}
-            options={[
-              { value: "entrada", label: "Entrada" },
-              { value: "saida", label: "Saída" },
-            ]}
             required
           />
         </Grid>
@@ -106,7 +110,7 @@ function MovimentoEstoqueForm({ open, onClose, onSave }) {
           />
         </Grid>
 
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <BaseFormField
             label="Quantidade"
             name="quantidade"
@@ -117,7 +121,7 @@ function MovimentoEstoqueForm({ open, onClose, onSave }) {
           />
         </Grid>
 
-        <Grid size={{ xs: 12, md: form.tipo === "saida" ? 5 : 8 }}>
+        <Grid size={{ xs: 12 }}>
           <BaseFormField
             label="Motivo"
             name="motivo"
@@ -126,50 +130,9 @@ function MovimentoEstoqueForm({ open, onClose, onSave }) {
             required
           />
         </Grid>
-
-        {form.tipo === "saida" && (
-          <Grid size={{ xs: 12, md: 3 }}>
-            <BaseSelect
-              label="Origem"
-              name="origem"
-              value={form.origem}
-              onChange={handleChange}
-              options={[
-                { value: "manual", label: "Manual" },
-                { value: "avaria", label: "Avaria" },
-                { value: "perda", label: "Perda" },
-              ]}
-            />
-          </Grid>
-        )}
-
-        {controlaLote && (
-          <>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <BaseFormField
-                label="Número do lote"
-                name="loteNumero"
-                value={form.loteNumero}
-                onChange={handleChange}
-                required
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12, md: 6 }}>
-              <BaseFormField
-                label="Validade (obrigatório só no 1º lançamento do lote)"
-                name="loteValidade"
-                type="date"
-                value={form.loteValidade}
-                onChange={handleChange}
-                slotProps={{ inputLabel: { shrink: true } }}
-              />
-            </Grid>
-          </>
-        )}
       </Grid>
     </BaseDialog>
   );
 }
 
-export default MovimentoEstoqueForm;
+export default BloqueioReservaForm;

@@ -5,6 +5,8 @@ const ClienteRepository = require("../repositories/ClienteRepository");
 const ProdutoRepository = require("../repositories/ProdutoRepository");
 const LocalizacaoRepository = require("../repositories/LocalizacaoRepository");
 const EstoqueLocalizacaoHelper = require("./EstoqueLocalizacaoHelper");
+const LoteRepository = require("../repositories/LoteRepository");
+const LoteService = require("./LoteService");
 const { calcularParcelas } = require("../utils/parcelamento");
 
 class VendaService {
@@ -102,6 +104,7 @@ class VendaService {
         quantidade,
         precoUnitario,
         subtotal,
+        controlaLote: produto.controlaLote,
       });
     }
 
@@ -113,22 +116,37 @@ class VendaService {
           vendedorId: vendedorId || null,
           total,
           itens: {
-            create: itensCriar,
+            create: itensCriar.map(
+              ({ controlaLote, ...itemParaCriar }) => itemParaCriar,
+            ),
           },
         },
       });
 
       for (const item of itensCriar) {
-        const alocacoes = await EstoqueLocalizacaoHelper.debitarAutoSelecionando(
-          tx,
-          {
+        const alocacoesLocalizacao =
+          await EstoqueLocalizacaoHelper.debitarAutoSelecionando(tx, {
             produtoId: item.produtoId,
             quantidade: item.quantidade,
             empresaId,
-          },
-        );
+          });
 
-        for (const alocacao of alocacoes) {
+        const alocacoesLote = item.controlaLote
+          ? await LoteService.resolverConsumoAutomatico(tx, {
+              produtoId: item.produtoId,
+              quantidade: item.quantidade,
+              empresaId,
+            })
+          : null;
+
+        const chunks = alocacoesLote
+          ? this.#mesclarAlocacoes(alocacoesLocalizacao, alocacoesLote)
+          : alocacoesLocalizacao.map((alocacao) => ({
+              ...alocacao,
+              loteId: null,
+            }));
+
+        for (const chunk of chunks) {
           const produtoAtual = await tx.produto.findUnique({
             where: {
               id: item.produtoId,
@@ -140,12 +158,13 @@ class VendaService {
               produtoId: item.produtoId,
               empresaId,
               tipo: "saida",
-              quantidade: alocacao.quantidade,
+              quantidade: chunk.quantidade,
               motivo: `Venda #${novaVenda.id}`,
               origem: "venda",
               saldoApos: produtoAtual.estoque,
               vendaId: novaVenda.id,
-              localizacaoId: alocacao.localizacaoId,
+              localizacaoId: chunk.localizacaoId,
+              loteId: chunk.loteId,
             },
           });
         }
@@ -246,6 +265,14 @@ class VendaService {
           },
         );
 
+        if (movimento.loteId) {
+          await LoteRepository.incrementar(
+            movimento.loteId,
+            movimento.quantidade,
+            tx,
+          );
+        }
+
         await tx.movimentoEstoque.create({
           data: {
             produtoId: movimento.produtoId,
@@ -257,6 +284,7 @@ class VendaService {
             saldoApos: produtoAtualizado.estoque,
             vendaId: id,
             localizacaoId,
+            loteId: movimento.loteId || null,
           },
         });
       }
@@ -289,6 +317,40 @@ class VendaService {
         },
       });
     });
+  }
+
+  #mesclarAlocacoes(alocacoesLocalizacao, alocacoesLote) {
+    const chunks = [];
+
+    let i = 0;
+    let j = 0;
+    let restanteLocalizacao = alocacoesLocalizacao[0]?.quantidade || 0;
+    let restanteLote = alocacoesLote[0]?.quantidade || 0;
+
+    while (i < alocacoesLocalizacao.length && j < alocacoesLote.length) {
+      const consumir = Math.min(restanteLocalizacao, restanteLote);
+
+      chunks.push({
+        localizacaoId: alocacoesLocalizacao[i].localizacaoId,
+        loteId: alocacoesLote[j].loteId,
+        quantidade: consumir,
+      });
+
+      restanteLocalizacao -= consumir;
+      restanteLote -= consumir;
+
+      if (restanteLocalizacao === 0) {
+        i += 1;
+        restanteLocalizacao = alocacoesLocalizacao[i]?.quantidade || 0;
+      }
+
+      if (restanteLote === 0) {
+        j += 1;
+        restanteLote = alocacoesLote[j]?.quantidade || 0;
+      }
+    }
+
+    return chunks;
   }
 
   #naoEncontrada() {
