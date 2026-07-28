@@ -40,7 +40,7 @@ class TituloRepository {
     });
   }
 
-  async baixar(id) {
+  async baixar(id, contaBancariaId) {
     return prisma.titulo.update({
       where: {
         id,
@@ -48,6 +48,7 @@ class TituloRepository {
       data: {
         status: "paga",
         dataPagamento: new Date(),
+        contaBancariaId,
       },
     });
   }

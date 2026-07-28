@@ -77,6 +77,7 @@ class ProdutoService {
       cfop,
       origem,
       cest,
+      controlaLote,
     } = data;
 
     if (!codigo || !descricao) {
@@ -102,6 +103,7 @@ class ProdutoService {
       cfop: cfop || null,
       origem: origem !== undefined && origem !== "" ? Number(origem) : 0,
       cest: cest || null,
+      controlaLote: Boolean(controlaLote),
     };
   }
 

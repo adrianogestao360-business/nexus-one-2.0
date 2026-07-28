@@ -11,8 +11,10 @@ const tituloService = {
     return response.data;
   },
 
-  baixar: async (id) => {
-    const response = await api.patch(`/titulos/${id}/baixar`);
+  baixar: async (id, contaBancariaId) => {
+    const response = await api.patch(`/titulos/${id}/baixar`, {
+      contaBancariaId,
+    });
     return response.data;
   },
 

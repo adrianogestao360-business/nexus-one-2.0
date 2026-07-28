@@ -35,6 +35,10 @@ const IntegracaoFiscalController = require("../controllers/IntegracaoFiscalContr
 const DreController = require("../controllers/DreController");
 const DevolucaoController = require("../controllers/DevolucaoController");
 const IaController = require("../controllers/IaController");
+const ContaBancariaController = require("../controllers/ContaBancariaController");
+const FluxoCaixaController = require("../controllers/FluxoCaixaController");
+const LoteController = require("../controllers/LoteController");
+const InventarioController = require("../controllers/InventarioController");
 
 const AuthMiddleware = require("../middlewares/AuthMiddleware");
 const PermissionMiddleware = require("../middlewares/PermissionMiddleware");
@@ -655,6 +659,64 @@ router.post(
   "/ia/plano-de-acao",
   AuthMiddleware.handle,
   IaController.planoDeAcao,
+);
+
+router.get(
+  "/contas-bancarias",
+  AuthMiddleware.handle,
+  ContaBancariaController.index,
+);
+router.post(
+  "/contas-bancarias",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("financeiro.gerenciar"),
+  ContaBancariaController.store,
+);
+router.put(
+  "/contas-bancarias/:id",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("financeiro.gerenciar"),
+  ContaBancariaController.update,
+);
+router.delete(
+  "/contas-bancarias/:id",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("financeiro.gerenciar"),
+  ContaBancariaController.destroy,
+);
+
+router.get(
+  "/financeiro/fluxo-caixa",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("financeiro.gerenciar"),
+  FluxoCaixaController.show,
+);
+
+router.get("/lotes", AuthMiddleware.handle, LoteController.index);
+
+router.get("/inventarios", AuthMiddleware.handle, InventarioController.index);
+router.get(
+  "/inventarios/:id",
+  AuthMiddleware.handle,
+  InventarioController.show,
+);
+router.post(
+  "/inventarios",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("estoque.gerenciar"),
+  InventarioController.store,
+);
+router.put(
+  "/inventarios/:id/itens/:itemId",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("estoque.gerenciar"),
+  InventarioController.atualizarItem,
+);
+router.post(
+  "/inventarios/:id/fechar",
+  AuthMiddleware.handle,
+  PermissionMiddleware.handle("estoque.gerenciar"),
+  InventarioController.fechar,
 );
 
 module.exports = router;

@@ -1,19 +1,35 @@
 ﻿import { useEffect, useState } from "react";
-import { Alert, Button, Chip, Paper, Snackbar, Stack } from "@mui/material";
+import {
+  Alert,
+  Button,
+  Chip,
+  Paper,
+  Snackbar,
+  Stack,
+  Tab,
+  Tabs,
+} from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 
 import BasePage from "../../../components/BasePage/BasePage";
+import BaseDialog from "../../../components/BaseDialog/BaseDialog";
+import BaseFormField from "../../../components/BaseFormField/BaseFormField";
 import MovimentoEstoqueForm from "../../../components/MovimentoEstoqueForm/MovimentoEstoqueForm";
 import TransferenciaEstoqueForm from "../../../components/TransferenciaEstoqueForm/TransferenciaEstoqueForm";
+import InventarioForm from "../../../components/InventarioForm/InventarioForm";
 
 import movimentoEstoqueService from "../services/movimentoEstoqueService";
+import loteService from "../services/loteService";
+import inventarioService from "../services/inventarioService";
 
 const origemLabel = {
   manual: "Manual",
   venda: "Venda",
   compra: "Compra",
   transferencia: "Transferência",
+  devolucao: "Devolução",
+  ajuste_inventario: "Ajuste de Inventário",
 };
 
 const columns = [
@@ -73,10 +89,146 @@ const columns = [
   },
 ];
 
+const vencimentoStatus = (dataValidade) => {
+  if (!dataValidade) {
+    return null;
+  }
+
+  const hojeUTC = Date.UTC(
+    new Date().getFullYear(),
+    new Date().getMonth(),
+    new Date().getDate(),
+  );
+
+  const validade = new Date(dataValidade);
+  const validadeUTC = Date.UTC(
+    validade.getUTCFullYear(),
+    validade.getUTCMonth(),
+    validade.getUTCDate(),
+  );
+
+  const diffDias = Math.round((validadeUTC - hojeUTC) / (1000 * 60 * 60 * 24));
+
+  if (diffDias < 0) {
+    return { label: "Vencido", color: "error" };
+  }
+
+  if (diffDias <= 7) {
+    return { label: "Vencendo", color: "warning" };
+  }
+
+  return { label: "OK", color: "success" };
+};
+
+const lotesColunas = [
+  {
+    field: "produto",
+    headerName: "Produto",
+    flex: 2,
+    valueGetter: (_value, row) => row.produto?.descricao || "-",
+  },
+  { field: "numero", headerName: "Lote", flex: 1 },
+  {
+    field: "quantidade",
+    headerName: "Quantidade",
+    type: "number",
+    flex: 1,
+  },
+  {
+    field: "dataValidade",
+    headerName: "Validade",
+    flex: 1,
+    valueGetter: (value) =>
+      value
+        ? new Date(value).toLocaleDateString("pt-BR", { timeZone: "UTC" })
+        : "-",
+  },
+  {
+    field: "status",
+    headerName: "Status",
+    flex: 1,
+    renderCell: (params) => {
+      const status = vencimentoStatus(params.row.dataValidade);
+
+      if (!status) {
+        return "-";
+      }
+
+      return (
+        <Chip
+          label={status.label}
+          color={status.color}
+          size="small"
+          variant="outlined"
+        />
+      );
+    },
+  },
+];
+
+const inventarioTipoLabel = {
+  geral: "Geral",
+  rotativo: "Rotativo",
+};
+
+const inventarioStatusLabel = {
+  aberto: "Aberto",
+  fechado: "Fechado",
+};
+
+const inventarioColunas = [
+  {
+    field: "tipo",
+    headerName: "Tipo",
+    flex: 1,
+    valueGetter: (value) => inventarioTipoLabel[value] || value,
+  },
+  {
+    field: "escopo",
+    headerName: "Escopo",
+    flex: 2,
+    valueGetter: (_value, row) =>
+      row.localizacao?.codigo ||
+      row.produto?.descricao ||
+      "Todo o estoque",
+  },
+  {
+    field: "status",
+    headerName: "Status",
+    flex: 1,
+    renderCell: (params) => (
+      <Chip
+        label={inventarioStatusLabel[params.value] || params.value}
+        color={params.value === "aberto" ? "warning" : "success"}
+        size="small"
+        variant="outlined"
+      />
+    ),
+  },
+  {
+    field: "createdAt",
+    headerName: "Aberto em",
+    flex: 1,
+    valueGetter: (value) => new Date(value).toLocaleString("pt-BR"),
+  },
+  {
+    field: "itens",
+    headerName: "Itens",
+    flex: 1,
+    valueGetter: (_value, row) => row._count?.itens ?? 0,
+  },
+];
+
 function Estoque() {
+  const [aba, setAba] = useState("movimentos");
   const [rows, setRows] = useState([]);
+  const [lotes, setLotes] = useState([]);
+  const [inventarios, setInventarios] = useState([]);
   const [openForm, setOpenForm] = useState(false);
   const [openTransferencia, setOpenTransferencia] = useState(false);
+  const [openInventarioForm, setOpenInventarioForm] = useState(false);
+  const [inventarioDetalhe, setInventarioDetalhe] = useState(null);
+  const [contagens, setContagens] = useState({});
   const [mensagem, setMensagem] = useState("");
   const [tipoMensagem, setTipoMensagem] = useState("success");
 
@@ -89,6 +241,18 @@ function Estoque() {
 
       setTipoMensagem("error");
       setMensagem("Erro ao carregar movimentos de estoque.");
+    }
+  }
+
+  async function carregarLotes() {
+    try {
+      const dados = await loteService.listar();
+      setLotes(dados);
+    } catch (error) {
+      console.error("Erro ao carregar lotes:", error);
+
+      setTipoMensagem("error");
+      setMensagem("Erro ao carregar lotes.");
     }
   }
 
@@ -132,59 +296,246 @@ function Estoque() {
     }
   }
 
+  async function carregarInventarios() {
+    try {
+      const dados = await inventarioService.listar();
+      setInventarios(dados);
+    } catch (error) {
+      console.error("Erro ao carregar inventários:", error);
+
+      setTipoMensagem("error");
+      setMensagem("Erro ao carregar inventários.");
+    }
+  }
+
+  async function abrirInventario(dados) {
+    try {
+      await inventarioService.abrir(dados);
+      await carregarInventarios();
+
+      setTipoMensagem("success");
+      setMensagem("Inventário aberto com sucesso.");
+    } catch (error) {
+      console.error("Erro ao abrir inventário:", error);
+
+      setTipoMensagem("error");
+      setMensagem(
+        error.response?.data?.message || "Erro ao abrir inventário.",
+      );
+
+      throw error;
+    }
+  }
+
+  async function abrirDetalheInventario(inventario) {
+    try {
+      const detalhe = await inventarioService.buscarPorId(inventario.id);
+      setInventarioDetalhe(detalhe);
+      setContagens({});
+    } catch (error) {
+      console.error("Erro ao carregar inventário:", error);
+
+      setTipoMensagem("error");
+      setMensagem("Erro ao carregar inventário.");
+    }
+  }
+
+  async function salvarContagem(itemId) {
+    try {
+      await inventarioService.registrarContagem(
+        inventarioDetalhe.id,
+        itemId,
+        contagens[itemId],
+      );
+
+      const detalhe = await inventarioService.buscarPorId(
+        inventarioDetalhe.id,
+      );
+      setInventarioDetalhe(detalhe);
+
+      setTipoMensagem("success");
+      setMensagem("Contagem registrada.");
+    } catch (error) {
+      console.error("Erro ao registrar contagem:", error);
+
+      setTipoMensagem("error");
+      setMensagem(
+        error.response?.data?.message || "Erro ao registrar contagem.",
+      );
+    }
+  }
+
+  async function fecharInventario() {
+    try {
+      const detalhe = await inventarioService.fechar(inventarioDetalhe.id);
+      setInventarioDetalhe(detalhe);
+      await carregarInventarios();
+
+      setTipoMensagem("success");
+      setMensagem("Inventário fechado. Ajustes de estoque aplicados.");
+    } catch (error) {
+      console.error("Erro ao fechar inventário:", error);
+
+      setTipoMensagem("error");
+      setMensagem(
+        error.response?.data?.message || "Erro ao fechar inventário.",
+      );
+    }
+  }
+
   useEffect(() => {
-    carregarMovimentos();
-  }, []);
+    if (aba === "lotes") {
+      carregarLotes();
+    } else if (aba === "inventario") {
+      carregarInventarios();
+    } else {
+      carregarMovimentos();
+    }
+  }, [aba]);
 
   return (
     <BasePage
       title="Estoque"
       subtitle="Kardex de Movimentações"
-      buttonLabel="Novo Movimento"
-      onButtonClick={() => setOpenForm(true)}
+      buttonLabel={
+        aba === "movimentos"
+          ? "Novo Movimento"
+          : aba === "inventario"
+            ? "Novo Inventário"
+            : undefined
+      }
+      onButtonClick={() =>
+        aba === "inventario" ? setOpenInventarioForm(true) : setOpenForm(true)
+      }
     >
-      <Stack direction="row" justifyContent="flex-end" sx={{ mb: 2 }}>
-        <Button
-          variant="outlined"
-          startIcon={<SwapHorizIcon />}
-          onClick={() => setOpenTransferencia(true)}
-        >
-          Transferir Estoque
-        </Button>
-      </Stack>
-
-      <Paper
-        elevation={0}
-        sx={{
-          height: 620,
-          borderRadius: 3,
-          border: "1px solid rgba(148, 163, 184, 0.14)",
-          overflow: "hidden",
-        }}
+      <Tabs
+        value={aba}
+        onChange={(_event, valor) => setAba(valor)}
+        sx={{ mb: 2 }}
       >
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          disableRowSelectionOnClick
-          pageSizeOptions={[10, 20, 50]}
-          initialState={{
-            pagination: {
-              paginationModel: {
-                pageSize: 10,
-              },
-            },
-          }}
+        <Tab value="movimentos" label="Movimentações" />
+        <Tab value="lotes" label="Lotes e Validades" />
+        <Tab value="inventario" label="Inventário" />
+      </Tabs>
+
+      {aba === "movimentos" && (
+        <Stack direction="row" justifyContent="flex-end" sx={{ mb: 2 }}>
+          <Button
+            variant="outlined"
+            startIcon={<SwapHorizIcon />}
+            onClick={() => setOpenTransferencia(true)}
+          >
+            Transferir Estoque
+          </Button>
+        </Stack>
+      )}
+
+      {aba === "movimentos" && (
+        <Paper
+          elevation={0}
           sx={{
-            border: 0,
-            "& .MuiDataGrid-columnHeaders": {
-              backgroundColor: "#1B2438",
-            },
-            "& .MuiDataGrid-row:hover": {
-              backgroundColor: "#1B2438",
-            },
+            height: 620,
+            borderRadius: 3,
+            border: "1px solid rgba(148, 163, 184, 0.14)",
+            overflow: "hidden",
           }}
-        />
-      </Paper>
+        >
+          <DataGrid
+            rows={rows}
+            columns={columns}
+            disableRowSelectionOnClick
+            pageSizeOptions={[10, 20, 50]}
+            initialState={{
+              pagination: {
+                paginationModel: {
+                  pageSize: 10,
+                },
+              },
+            }}
+            sx={{
+              border: 0,
+              "& .MuiDataGrid-columnHeaders": {
+                backgroundColor: "#1B2438",
+              },
+              "& .MuiDataGrid-row:hover": {
+                backgroundColor: "#1B2438",
+              },
+            }}
+          />
+        </Paper>
+      )}
+
+      {aba === "lotes" && (
+        <Paper
+          elevation={0}
+          sx={{
+            height: 620,
+            borderRadius: 3,
+            border: "1px solid rgba(148, 163, 184, 0.14)",
+            overflow: "hidden",
+          }}
+        >
+          <DataGrid
+            rows={lotes}
+            columns={lotesColunas}
+            disableRowSelectionOnClick
+            pageSizeOptions={[10, 20, 50]}
+            initialState={{
+              pagination: {
+                paginationModel: {
+                  pageSize: 10,
+                },
+              },
+            }}
+            sx={{
+              border: 0,
+              "& .MuiDataGrid-columnHeaders": {
+                backgroundColor: "#1B2438",
+              },
+              "& .MuiDataGrid-row:hover": {
+                backgroundColor: "#1B2438",
+              },
+            }}
+          />
+        </Paper>
+      )}
+
+      {aba === "inventario" && (
+        <Paper
+          elevation={0}
+          sx={{
+            height: 620,
+            borderRadius: 3,
+            border: "1px solid rgba(148, 163, 184, 0.14)",
+            overflow: "hidden",
+          }}
+        >
+          <DataGrid
+            rows={inventarios}
+            columns={inventarioColunas}
+            disableRowSelectionOnClick
+            onRowClick={(params) => abrirDetalheInventario(params.row)}
+            pageSizeOptions={[10, 20, 50]}
+            initialState={{
+              pagination: {
+                paginationModel: {
+                  pageSize: 10,
+                },
+              },
+            }}
+            sx={{
+              border: 0,
+              cursor: "pointer",
+              "& .MuiDataGrid-columnHeaders": {
+                backgroundColor: "#1B2438",
+              },
+              "& .MuiDataGrid-row:hover": {
+                backgroundColor: "#1B2438",
+              },
+            }}
+          />
+        </Paper>
+      )}
 
       <MovimentoEstoqueForm
         open={openForm}
@@ -197,6 +548,85 @@ function Estoque() {
         onClose={() => setOpenTransferencia(false)}
         onSave={salvarTransferencia}
       />
+
+      <InventarioForm
+        open={openInventarioForm}
+        onClose={() => setOpenInventarioForm(false)}
+        onSave={abrirInventario}
+      />
+
+      <BaseDialog
+        open={Boolean(inventarioDetalhe)}
+        onClose={() => setInventarioDetalhe(null)}
+        title={`Inventário #${inventarioDetalhe?.id || ""} — ${
+          inventarioTipoLabel[inventarioDetalhe?.tipo] || ""
+        } (${inventarioStatusLabel[inventarioDetalhe?.status] || ""})`}
+        hideSave
+      >
+        {inventarioDetalhe && (
+          <Stack spacing={2}>
+            {inventarioDetalhe.itens.map((item) => (
+              <Stack
+                key={item.id}
+                direction="row"
+                spacing={2}
+                alignItems="center"
+                sx={{
+                  p: 1.5,
+                  borderRadius: 2,
+                  border: "1px solid rgba(148, 163, 184, 0.14)",
+                }}
+              >
+                <Stack sx={{ flex: 1, minWidth: 0 }}>
+                  <strong>{item.produto?.descricao}</strong>
+                  <span>
+                    {item.localizacao?.codigo} — Sistema: {item.quantidadeSistema}
+                    {item.quantidadeContada !== null
+                      ? ` | Contado: ${item.quantidadeContada}`
+                      : ""}
+                  </span>
+                </Stack>
+
+                {inventarioDetalhe.status === "aberto" && (
+                  <>
+                    <BaseFormField
+                      label="Quantidade contada"
+                      name={`contagem-${item.id}`}
+                      type="number"
+                      value={
+                        contagens[item.id] ?? item.quantidadeContada ?? ""
+                      }
+                      onChange={(event) =>
+                        setContagens((old) => ({
+                          ...old,
+                          [item.id]: event.target.value,
+                        }))
+                      }
+                      sx={{ width: 180, flexShrink: 0 }}
+                    />
+
+                    <Button
+                      variant="outlined"
+                      onClick={() => salvarContagem(item.id)}
+                      sx={{ flexShrink: 0 }}
+                    >
+                      Salvar
+                    </Button>
+                  </>
+                )}
+              </Stack>
+            ))}
+
+            {inventarioDetalhe.status === "aberto" && (
+              <Stack direction="row" justifyContent="flex-end">
+                <Button variant="contained" onClick={fecharInventario}>
+                  Fechar Inventário
+                </Button>
+              </Stack>
+            )}
+          </Stack>
+        )}
+      </BaseDialog>
 
       <Snackbar
         open={Boolean(mensagem)}

@@ -31,6 +31,7 @@ class TituloController {
     const titulo = await TituloService.baixar(
       Number(req.params.id),
       req.usuario.empresaId,
+      req.body?.contaBancariaId,
     );
 
     return res.json(titulo);

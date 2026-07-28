@@ -3,7 +3,9 @@ const prisma = require("../config/prisma");
 const ProdutoRepository = require("../repositories/ProdutoRepository");
 const MovimentoEstoqueRepository = require("../repositories/MovimentoEstoqueRepository");
 const LocalizacaoRepository = require("../repositories/LocalizacaoRepository");
+const LoteRepository = require("../repositories/LoteRepository");
 const EstoqueLocalizacaoHelper = require("./EstoqueLocalizacaoHelper");
+const LoteService = require("./LoteService");
 
 class MovimentoEstoqueService {
   async listar(empresaId, produtoId) {
@@ -14,7 +16,15 @@ class MovimentoEstoqueService {
   }
 
   async criar(data, empresaId) {
-    const { produtoId, tipo, quantidade, motivo, localizacaoId } = data;
+    const {
+      produtoId,
+      tipo,
+      quantidade,
+      motivo,
+      localizacaoId,
+      loteNumero,
+      loteValidade,
+    } = data;
 
     if (tipo !== "entrada" && tipo !== "saida") {
       const error = new Error('Tipo deve ser "entrada" ou "saida".');
@@ -62,6 +72,31 @@ class MovimentoEstoqueService {
               quantidade: quantidadeNum,
             });
 
+      let loteId = null;
+
+      if (produto.controlaLote) {
+        const lote =
+          tipo === "entrada"
+            ? await LoteService.resolverParaEntrada(tx, {
+                produtoId: produto.id,
+                numero: loteNumero,
+                dataValidade: loteValidade,
+                empresaId,
+              })
+            : await LoteService.resolverParaSaida(tx, {
+                produtoId: produto.id,
+                numero: loteNumero,
+                empresaId,
+                quantidade: quantidadeNum,
+              });
+
+        await (tipo === "entrada"
+          ? LoteRepository.incrementar(lote.id, quantidadeNum, tx)
+          : LoteRepository.decrementar(lote.id, quantidadeNum, tx));
+
+        loteId = lote.id;
+      }
+
       return tx.movimentoEstoque.create({
         data: {
           produtoId: produto.id,
@@ -72,6 +107,7 @@ class MovimentoEstoqueService {
           origem: "manual",
           saldoApos: produtoAtualizado.estoque,
           localizacaoId: localizacaoAlvo,
+          loteId,
         },
       });
     });

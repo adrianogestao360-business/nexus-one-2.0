@@ -59,6 +59,9 @@ model Empresa {
   notificacoesLidas NotificacaoLida[]
   metasVenda    MetaVenda[]
   devolucoes    Devolucao[]
+  contasBancarias ContaBancaria[]
+  lotes         Lote[]
+  inventarios   Inventario[]
 }
 
 model Usuario {
@@ -79,6 +82,7 @@ model Usuario {
   notificacoesLidas  NotificacaoLida[]
   vendasComoVendedor Venda[]
   metasVenda         MetaVenda[]
+  inventarios        Inventario[]
 
   @@index([empresaId])
 }
@@ -184,6 +188,8 @@ model Produto {
   origem Int?    @default(0)
   cest   String?
 
+  controlaLote Boolean @default(false)
+
   empresa Empresa @relation(fields: [empresaId], references: [id])
   zona    Zona?   @relation(fields: [zonaId], references: [id])
   vendaItens VendaItem[]
@@ -192,6 +198,9 @@ model Produto {
   separacaoItens SeparacaoItem[]
   estoquesLocalizacao EstoqueLocalizacao[]
   devolucaoItens DevolucaoItem[]
+  lotes Lote[]
+  inventarios Inventario[]
+  inventarioItens InventarioItem[]
 
   @@unique([empresaId, codigo])
   @@index([empresaId])
@@ -351,6 +360,7 @@ model Titulo {
   parcela       Int?
   totalParcelas Int?
   folhaPagamentoItemId Int?
+  contaBancariaId Int?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -360,6 +370,7 @@ model Titulo {
   venda              Venda?              @relation(fields: [vendaId], references: [id])
   compra             Compra?             @relation(fields: [compraId], references: [id])
   folhaPagamentoItem FolhaPagamentoItem? @relation(fields: [folhaPagamentoItemId], references: [id])
+  contaBancaria      ContaBancaria?      @relation(fields: [contaBancariaId], references: [id])
 
   @@index([empresaId])
 }
@@ -376,6 +387,7 @@ model MovimentoEstoque {
   vendaId       Int?
   compraId      Int?
   localizacaoId Int?
+  loteId        Int?
   createdAt     DateTime @default(now())
 
   produto     Produto      @relation(fields: [produtoId], references: [id])
@@ -383,9 +395,66 @@ model MovimentoEstoque {
   venda       Venda?       @relation(fields: [vendaId], references: [id])
   compra      Compra?      @relation(fields: [compraId], references: [id])
   localizacao Localizacao? @relation(fields: [localizacaoId], references: [id])
+  lote        Lote?        @relation(fields: [loteId], references: [id])
 
   @@index([empresaId])
   @@index([produtoId])
+}
+
+model Inventario {
+  id            Int       @id @default(autoincrement())
+  tipo          String    @default("geral")
+  status        String    @default("aberto")
+  empresaId     Int
+  localizacaoId Int?
+  produtoId     Int?
+  observacao    String?
+  criadoPorId   Int?
+  fechadoEm     DateTime?
+  createdAt     DateTime  @default(now())
+
+  empresa     Empresa          @relation(fields: [empresaId], references: [id])
+  localizacao Localizacao?     @relation(fields: [localizacaoId], references: [id])
+  produto     Produto?         @relation(fields: [produtoId], references: [id])
+  criadoPor   Usuario?         @relation(fields: [criadoPorId], references: [id])
+  itens       InventarioItem[]
+
+  @@index([empresaId])
+}
+
+model InventarioItem {
+  id                Int       @id @default(autoincrement())
+  inventarioId      Int
+  produtoId         Int
+  localizacaoId     Int
+  quantidadeSistema Int
+  quantidadeContada Int?
+  contadoEm         DateTime?
+
+  inventario  Inventario  @relation(fields: [inventarioId], references: [id])
+  produto     Produto     @relation(fields: [produtoId], references: [id])
+  localizacao Localizacao @relation(fields: [localizacaoId], references: [id])
+
+  @@unique([inventarioId, produtoId, localizacaoId])
+  @@index([inventarioId])
+}
+
+model Lote {
+  id           Int       @id @default(autoincrement())
+  produtoId    Int
+  numero       String
+  dataValidade DateTime?
+  quantidade   Int       @default(0)
+  ativo        Boolean   @default(true)
+  empresaId    Int
+  createdAt    DateTime  @default(now())
+
+  produto    Produto            @relation(fields: [produtoId], references: [id])
+  empresa    Empresa            @relation(fields: [empresaId], references: [id])
+  movimentos MovimentoEstoque[]
+
+  @@unique([produtoId, numero])
+  @@index([empresaId])
 }
 
 model Zona {
@@ -413,6 +482,8 @@ model Localizacao {
   zona       Zona?                @relation(fields: [zonaId], references: [id])
   estoques   EstoqueLocalizacao[]
   movimentos MovimentoEstoque[]
+  inventarios     Inventario[]
+  inventarioItens InventarioItem[]
 
   @@unique([empresaId, codigo])
 }
@@ -741,4 +812,19 @@ model DevolucaoItem {
   produto   Produto   @relation(fields: [produtoId], references: [id])
 
   @@index([devolucaoId])
+}
+
+model ContaBancaria {
+  id           Int      @id @default(autoincrement())
+  nome         String
+  tipo         String   @default("banco")
+  saldoInicial Decimal  @default(0) @db.Decimal(12, 2)
+  ativo        Boolean  @default(true)
+  empresaId    Int
+  createdAt    DateTime @default(now())
+
+  empresa Empresa  @relation(fields: [empresaId], references: [id])
+  titulos Titulo[]
+
+  @@index([empresaId])
 }

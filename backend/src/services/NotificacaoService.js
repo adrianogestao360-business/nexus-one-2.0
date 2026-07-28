@@ -2,6 +2,7 @@ const NotificacaoRepository = require("../repositories/NotificacaoRepository");
 
 const DIAS_ANTECEDENCIA_VENCIMENTO = 3;
 const HORAS_ATRASO_ENTREGA = 24;
+const DIAS_ANTECEDENCIA_VALIDADE = 7;
 
 function formatarData(data) {
   return new Date(data).toLocaleDateString("pt-BR");
@@ -20,7 +21,12 @@ class NotificacaoService {
       agora.getTime() - HORAS_ATRASO_ENTREGA * 60 * 60 * 1000,
     );
 
-    const [titulos, produtos, entregas, lidas] = await Promise.all([
+    const limiteValidade = new Date(agora);
+    limiteValidade.setDate(
+      limiteValidade.getDate() + DIAS_ANTECEDENCIA_VALIDADE,
+    );
+
+    const [titulos, produtos, entregas, lotes, lidas] = await Promise.all([
       NotificacaoRepository.listarTitulosVencendo(
         empresaId,
         limiteVencimento,
@@ -30,6 +36,7 @@ class NotificacaoService {
         empresaId,
         limiteAtrasoEntrega,
       ),
+      NotificacaoRepository.listarLotesVencendo(empresaId, limiteValidade),
       NotificacaoRepository.listarChavesLidas(usuarioId),
     ]);
 
@@ -69,6 +76,19 @@ class NotificacaoService {
         tipo: "entrega_atrasada",
         severidade: "error",
         mensagem: `Entrega #${entrega.id} está em rota desde ${formatarData(entrega.dataSaida)} sem confirmação.`,
+      });
+    }
+
+    for (const lote of lotes) {
+      const vencido = new Date(lote.dataValidade) < agora;
+
+      notificacoes.push({
+        chave: `lote:${lote.id}`,
+        tipo: "lote_vencendo",
+        severidade: vencido ? "error" : "warning",
+        mensagem: vencido
+          ? `Lote "${lote.numero}" de ${lote.produto.descricao} está vencido desde ${formatarData(lote.dataValidade)}.`
+          : `Lote "${lote.numero}" de ${lote.produto.descricao} vence em ${formatarData(lote.dataValidade)}.`,
       });
     }
 

@@ -2,7 +2,10 @@
 import {
   Alert,
   Button,
+  Card,
+  CardContent,
   Chip,
+  Grid,
   Link,
   Paper,
   Snackbar,
@@ -10,16 +13,23 @@ import {
   Tab,
   Tabs,
   Tooltip,
+  Typography,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
+import { LineChart } from "@mui/x-charts/LineChart";
 
 import BasePage from "../../../components/BasePage/BasePage";
 import BaseDialog from "../../../components/BaseDialog/BaseDialog";
 import BaseFormField from "../../../components/BaseFormField/BaseFormField";
+import BaseSelect from "../../../components/BaseSelect/BaseSelect";
+import BaseCrudTable from "../../../components/BaseCrudTable/BaseCrudTable";
 import TituloForm from "../../../components/TituloForm/TituloForm";
+import ContaBancariaForm from "../../../components/ContaBancariaForm/ContaBancariaForm";
 
 import tituloService from "../services/tituloService";
 import notaFiscalService from "../services/notaFiscalService";
+import contaBancariaService from "../services/contaBancariaService";
+import fluxoCaixaService from "../services/fluxoCaixaService";
 
 const statusLabel = {
   aberta: "Em aberto",
@@ -300,6 +310,15 @@ function Financeiro() {
   const [justificativaCancelamento, setJustificativaCancelamento] =
     useState("");
 
+  const [contasBancarias, setContasBancarias] = useState([]);
+  const [openContaForm, setOpenContaForm] = useState(false);
+  const [contaSelecionada, setContaSelecionada] = useState(null);
+
+  const [tituloParaBaixar, setTituloParaBaixar] = useState(null);
+  const [contaBaixaId, setContaBaixaId] = useState("");
+
+  const [fluxoCaixa, setFluxoCaixa] = useState(null);
+
   const [mensagem, setMensagem] = useState("");
   const [tipoMensagem, setTipoMensagem] = useState("success");
 
@@ -335,10 +354,18 @@ function Financeiro() {
     }
   }
 
-  async function baixarTitulo(id) {
+  function abrirBaixarTitulo(id) {
+    setTituloParaBaixar(id);
+    setContaBaixaId("");
+  }
+
+  async function confirmarBaixarTitulo() {
     try {
-      await tituloService.baixar(id);
+      await tituloService.baixar(tituloParaBaixar, contaBaixaId);
       await carregarTitulos(aba);
+
+      setTituloParaBaixar(null);
+      setContaBaixaId("");
 
       setTipoMensagem("success");
       setMensagem("Título baixado com sucesso.");
@@ -347,6 +374,8 @@ function Financeiro() {
 
       setTipoMensagem("error");
       setMensagem(error.response?.data?.message || "Erro ao baixar título.");
+
+      throw error;
     }
   }
 
@@ -438,9 +467,84 @@ function Financeiro() {
     }
   }
 
+  async function carregarContasBancarias() {
+    try {
+      const dados = await contaBancariaService.listar();
+      setContasBancarias(dados);
+    } catch (error) {
+      console.error("Erro ao carregar contas bancárias:", error);
+
+      setTipoMensagem("error");
+      setMensagem("Erro ao carregar contas bancárias.");
+    }
+  }
+
+  async function salvarContaBancaria(dados) {
+    try {
+      if (contaSelecionada) {
+        await contaBancariaService.atualizar(contaSelecionada.id, dados);
+        setTipoMensagem("success");
+        setMensagem("Conta bancária atualizada com sucesso.");
+      } else {
+        await contaBancariaService.criar(dados);
+        setTipoMensagem("success");
+        setMensagem("Conta bancária cadastrada com sucesso.");
+      }
+
+      await carregarContasBancarias();
+      setContaSelecionada(null);
+    } catch (error) {
+      console.error("Erro ao salvar conta bancária:", error);
+
+      setTipoMensagem("error");
+      setMensagem(
+        error.response?.data?.message || "Erro ao salvar conta bancária.",
+      );
+
+      throw error;
+    }
+  }
+
+  async function desativarContaBancaria(id) {
+    try {
+      await contaBancariaService.desativar(id);
+      await carregarContasBancarias();
+
+      setTipoMensagem("success");
+      setMensagem("Conta bancária desativada com sucesso.");
+    } catch (error) {
+      console.error("Erro ao desativar conta bancária:", error);
+
+      setTipoMensagem("error");
+      setMensagem(
+        error.response?.data?.message || "Erro ao desativar conta bancária.",
+      );
+    }
+  }
+
+  async function carregarFluxoCaixa() {
+    try {
+      const dados = await fluxoCaixaService.obter();
+      setFluxoCaixa(dados);
+    } catch (error) {
+      console.error("Erro ao carregar fluxo de caixa:", error);
+
+      setTipoMensagem("error");
+      setMensagem("Erro ao carregar fluxo de caixa.");
+    }
+  }
+
+  useEffect(() => {
+    carregarContasBancarias();
+  }, []);
+
   useEffect(() => {
     if (aba === "notas") {
       carregarNotasFiscais();
+    } else if (aba === "contas") {
+      carregarContasBancarias();
+    } else if (aba === "fluxo") {
+      carregarFluxoCaixa();
     } else {
       carregarTitulos(aba);
     }
@@ -448,12 +552,47 @@ function Financeiro() {
 
   const ehTitulos = aba === "receber" || aba === "pagar";
 
+  const botao =
+    aba === "contas"
+      ? {
+          label: "Nova Conta Bancária",
+          onClick: () => {
+            setContaSelecionada(null);
+            setOpenContaForm(true);
+          },
+        }
+      : ehTitulos
+        ? { label: "Novo Título", onClick: () => setOpenForm(true) }
+        : null;
+
+  const contasColunas = [
+    { field: "nome", headerName: "Nome", flex: 2 },
+    {
+      field: "tipo",
+      headerName: "Tipo",
+      flex: 1,
+      valueGetter: (value) => (value === "caixa" ? "Caixa" : "Banco"),
+    },
+    {
+      field: "saldoInicial",
+      headerName: "Saldo Inicial",
+      flex: 1,
+      valueGetter: (value) => `R$ ${Number(value).toFixed(2)}`,
+    },
+    {
+      field: "saldoAtual",
+      headerName: "Saldo Atual",
+      flex: 1,
+      valueGetter: (value) => `R$ ${Number(value).toFixed(2)}`,
+    },
+  ];
+
   return (
     <BasePage
       title="Financeiro"
       subtitle="Contas a Pagar e a Receber"
-      buttonLabel={ehTitulos ? "Novo Título" : undefined}
-      onButtonClick={() => setOpenForm(true)}
+      buttonLabel={botao?.label}
+      onButtonClick={botao?.onClick}
     >
       <Tabs
         value={aba}
@@ -463,12 +602,14 @@ function Financeiro() {
         <Tab value="receber" label="A Receber" />
         <Tab value="pagar" label="A Pagar" />
         <Tab value="notas" label="Notas Fiscais" />
+        <Tab value="contas" label="Contas Bancárias" />
+        <Tab value="fluxo" label="Fluxo de Caixa" />
       </Tabs>
 
       {ehTitulos && (
         <TituloTable
           rows={titulos}
-          onBaixar={baixarTitulo}
+          onBaixar={abrirBaixarTitulo}
           onCancelar={cancelarTitulo}
           contraparteLabel={aba === "receber" ? "Cliente" : "Fornecedor"}
         />
@@ -491,11 +632,128 @@ function Financeiro() {
         </>
       )}
 
+      {aba === "contas" && (
+        <BaseCrudTable
+          rows={contasBancarias}
+          columns={contasColunas}
+          onEdit={(conta) => {
+            setContaSelecionada(conta);
+            setOpenContaForm(true);
+          }}
+          onDelete={desativarContaBancaria}
+        />
+      )}
+
+      {aba === "fluxo" && fluxoCaixa && (
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, md: 3 }}>
+            <Card
+              elevation={0}
+              sx={{ border: "1px solid rgba(148, 163, 184, 0.14)" }}
+            >
+              <CardContent>
+                <Typography variant="body2" color="text.secondary">
+                  Saldo Atual Total
+                </Typography>
+                <Typography variant="h5" fontWeight={700}>
+                  R$ {fluxoCaixa.saldoAtualTotal.toFixed(2)}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {fluxoCaixa.contas.map((conta) => (
+            <Grid key={conta.id} size={{ xs: 12, md: 3 }}>
+              <Card
+                elevation={0}
+                sx={{ border: "1px solid rgba(148, 163, 184, 0.14)" }}
+              >
+                <CardContent>
+                  <Typography variant="body2" color="text.secondary">
+                    {conta.nome}
+                  </Typography>
+                  <Typography variant="h6" fontWeight={700}>
+                    R$ {Number(conta.saldoAtual).toFixed(2)}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+
+          <Grid size={{ xs: 12 }}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2,
+                borderRadius: 3,
+                border: "1px solid rgba(148, 163, 184, 0.14)",
+              }}
+            >
+              <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
+                Projeção de Saldo (próximos 30 dias)
+              </Typography>
+
+              <LineChart
+                height={280}
+                series={[
+                  {
+                    data: fluxoCaixa.projecao.map((item) => item.saldoProjetado),
+                    label: "Saldo projetado",
+                    color: "#3B82F6",
+                    valueFormatter: (valor) => `R$ ${Number(valor).toFixed(2)}`,
+                  },
+                ]}
+                xAxis={[
+                  {
+                    scaleType: "point",
+                    data: fluxoCaixa.projecao.map((item) =>
+                      new Date(`${item.data}T00:00:00`).toLocaleDateString(
+                        "pt-BR",
+                        { day: "2-digit", month: "2-digit" },
+                      ),
+                    ),
+                  },
+                ]}
+              />
+            </Paper>
+          </Grid>
+        </Grid>
+      )}
+
       <TituloForm
         open={openForm}
         onClose={() => setOpenForm(false)}
         onSave={salvarTitulo}
       />
+
+      <ContaBancariaForm
+        open={openContaForm}
+        conta={contaSelecionada}
+        onClose={() => {
+          setOpenContaForm(false);
+          setContaSelecionada(null);
+        }}
+        onSave={salvarContaBancaria}
+      />
+
+      <BaseDialog
+        open={Boolean(tituloParaBaixar)}
+        onClose={() => setTituloParaBaixar(null)}
+        onSave={confirmarBaixarTitulo}
+        title="Baixar Título"
+      >
+        <BaseSelect
+          label="Conta bancária / caixa"
+          name="contaBaixaId"
+          value={contaBaixaId}
+          onChange={(event) => setContaBaixaId(event.target.value)}
+          options={contasBancarias.map((conta) => ({
+            value: conta.id,
+            label: conta.nome,
+          }))}
+          required
+        />
+      </BaseDialog>
 
       <BaseDialog
         open={Boolean(notaFiscalParaCancelar)}

@@ -40,6 +40,28 @@ class NotificacaoRepository {
     });
   }
 
+  async listarLotesVencendo(empresaId, dataLimite) {
+    return prisma.lote.findMany({
+      where: {
+        empresaId,
+        ativo: true,
+        quantidade: {
+          gt: 0,
+        },
+        dataValidade: {
+          not: null,
+          lte: dataLimite,
+        },
+      },
+      include: {
+        produto: true,
+      },
+      orderBy: {
+        dataValidade: "asc",
+      },
+    });
+  }
+
   async listarChavesLidas(usuarioId) {
     return prisma.notificacaoLida.findMany({
       where: {

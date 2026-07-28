@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { Divider, Grid, Typography } from "@mui/material";
+import {
+  Checkbox,
+  Divider,
+  FormControlLabel,
+  Grid,
+  Typography,
+} from "@mui/material";
 
 import BaseDialog from "../BaseDialog/BaseDialog";
 import BaseFormField from "../BaseFormField/BaseFormField";
@@ -21,6 +27,7 @@ const initialState = {
   cfop: "5102",
   origem: "0",
   cest: "",
+  controlaLote: false,
 };
 
 function ProdutoForm({
@@ -54,6 +61,15 @@ function ProdutoForm({
     setForm((old) => ({
       ...old,
       [name]: value,
+    }));
+  }
+
+  function handleChangeCheckbox(event) {
+    const { name, checked } = event.target;
+
+    setForm((old) => ({
+      ...old,
+      [name]: checked,
     }));
   }
 
@@ -155,6 +171,22 @@ function ProdutoForm({
             name="endereco"
             value={form.endereco}
             onChange={handleChange}
+          />
+        </Grid>
+
+        <Grid
+          size={{ xs: 12, md: 4 }}
+          sx={{ display: "flex", alignItems: "center" }}
+        >
+          <FormControlLabel
+            control={
+              <Checkbox
+                name="controlaLote"
+                checked={Boolean(form.controlaLote)}
+                onChange={handleChangeCheckbox}
+              />
+            }
+            label="Controla lote e validade"
           />
         </Grid>
 

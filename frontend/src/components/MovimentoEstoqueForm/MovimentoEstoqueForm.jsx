@@ -14,6 +14,8 @@ const initialState = {
   quantidade: "",
   motivo: "",
   localizacaoId: "",
+  loteNumero: "",
+  loteValidade: "",
 };
 
 function MovimentoEstoqueForm({ open, onClose, onSave }) {
@@ -47,6 +49,11 @@ function MovimentoEstoqueForm({ open, onClose, onSave }) {
 
     onClose();
   }
+
+  const produtoSelecionado = produtos.find(
+    (produto) => produto.id === form.produtoId,
+  );
+  const controlaLote = Boolean(produtoSelecionado?.controlaLote);
 
   return (
     <BaseDialog
@@ -118,6 +125,31 @@ function MovimentoEstoqueForm({ open, onClose, onSave }) {
             required
           />
         </Grid>
+
+        {controlaLote && (
+          <>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <BaseFormField
+                label="Número do lote"
+                name="loteNumero"
+                value={form.loteNumero}
+                onChange={handleChange}
+                required
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <BaseFormField
+                label="Validade (obrigatório só no 1º lançamento do lote)"
+                name="loteValidade"
+                type="date"
+                value={form.loteValidade}
+                onChange={handleChange}
+                slotProps={{ inputLabel: { shrink: true } }}
+              />
+            </Grid>
+          </>
+        )}
       </Grid>
     </BaseDialog>
   );

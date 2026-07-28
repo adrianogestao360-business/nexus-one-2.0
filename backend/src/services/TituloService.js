@@ -1,6 +1,7 @@
 const TituloRepository = require("../repositories/TituloRepository");
 const ClienteRepository = require("../repositories/ClienteRepository");
 const FornecedorRepository = require("../repositories/FornecedorRepository");
+const ContaBancariaRepository = require("../repositories/ContaBancariaRepository");
 
 class TituloService {
   async listar(empresaId, filtros) {
@@ -72,7 +73,7 @@ class TituloService {
     });
   }
 
-  async baixar(id, empresaId) {
+  async baixar(id, empresaId, contaBancariaId) {
     const titulo = await this.buscarPorId(id, empresaId);
 
     if (titulo.status !== "aberta") {
@@ -81,7 +82,26 @@ class TituloService {
       throw error;
     }
 
-    return TituloRepository.baixar(id);
+    if (!contaBancariaId) {
+      const error = new Error(
+        "Selecione a conta bancária/caixa usada na baixa.",
+      );
+      error.status = 400;
+      throw error;
+    }
+
+    const conta = await ContaBancariaRepository.findById(
+      Number(contaBancariaId),
+      empresaId,
+    );
+
+    if (!conta) {
+      const error = new Error("Conta bancária não encontrada.");
+      error.status = 404;
+      throw error;
+    }
+
+    return TituloRepository.baixar(id, Number(contaBancariaId));
   }
 
   async cancelar(id, empresaId) {
